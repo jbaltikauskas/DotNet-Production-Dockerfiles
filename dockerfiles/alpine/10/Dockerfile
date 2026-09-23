@@ -106,6 +106,31 @@ RUN addgroup --gid ${GID} ${USERGROUP} \
 # Data (writable app state; same path as Ubuntu and Ubuntu Chiseled bases)
 # In-container commands (docker exec). WORKDIR is /app, so ./app-data is /app/app-data.
 # The app is PID 1. dotnet-debug takes the process id as a positional argument.
+COPY --chown=contoso:contoso [".empty", "/app/app-data"]
+
+# Runtime metadata snapshots (owned by contoso)
+RUN <<EOT
+  mkdir -p /app/.info
+  dotnet --info > /app/.info/dotnet.txt
+  cat /etc/os-release > /app/.info/linux.txt
+  chown -R ${USER}:${USERGROUP} /app/.info/
+EOT
+
+# APP_UID — ASP.NET Core container convention; matches contoso (7777).
+ENV APP_UID=7777
+
+# Switch to the non-root application user (reset in `final` after root COPY/RUN)
+USER contoso
+
+# === Final target: runtime plus dotnet-tools ===
+FROM aspnet-base AS final
+
+# COPY/RUN require root; aspnet-base ends as contoso. /app stays root-owned, so chmod must run as root.
+USER root
+
+# Merged diagnostic CLIs from dockerfiles/.dotnet-tools
+# (dotnet-debug, dotnet-gcdump, dotnet-trace).
+# Pass the folder as: --build-context dotnet-tools=dockerfiles/.dotnet-tools
 #
 # dotnet-trace
 # dotnet-trace collect -o ./app-data/trace.nettrace --process-id 1 --duration 00:00:15
@@ -133,31 +158,6 @@ RUN addgroup --gid ${GID} ${USERGROUP} \
 # dotnet-debug attach 1 -c clrthreads -c exit
 # dotnet-debug attach 1 -c threadpool -c exit
 # dotnet-debug attach 1 -c gcheapstat -c exit
-COPY --chown=contoso:contoso [".empty", "/app/app-data"]
-
-# Runtime metadata snapshots (owned by contoso)
-RUN <<EOT
-  mkdir -p /app/.info
-  dotnet --info > /app/.info/dotnet.txt
-  cat /etc/os-release > /app/.info/linux.txt
-  chown -R ${USER}:${USERGROUP} /app/.info/
-EOT
-
-# APP_UID — ASP.NET Core container convention; matches contoso (7777).
-ENV APP_UID=7777
-
-# Switch to the non-root application user (reset in `final` after root COPY/RUN)
-USER contoso
-
-# === Final target: runtime plus dotnet-tools ===
-FROM aspnet-base AS final
-
-# COPY/RUN require root; aspnet-base ends as contoso. /app stays root-owned, so chmod must run as root.
-USER root
-
-# Merged diagnostic CLIs from dockerfiles/.dotnet-tools
-# (dotnet-debug, dotnet-gcdump, dotnet-trace).
-# Pass the folder as: --build-context dotnet-tools=dockerfiles/.dotnet-tools
 COPY --chown=contoso:contoso --from=dotnet-tools / /app/dotnet-tools
 
 # The merged folder ships DLLs only. These wrappers let PATH resolve the short names.

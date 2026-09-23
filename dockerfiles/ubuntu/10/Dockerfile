@@ -132,6 +132,33 @@ USER root
 # Merged diagnostic CLIs from dockerfiles/.dotnet-tools
 # (dotnet-debug, dotnet-gcdump, dotnet-trace).
 # Pass the folder as: --build-context dotnet-tools=dockerfiles/.dotnet-tools
+#
+# dotnet-trace
+# dotnet-trace collect -o ./app-data/trace.nettrace --process-id 1 --duration 00:00:15
+# dotnet-trace collect -o ./app-data/trace-cpu.nettrace --process-id 1 --duration 00:00:15 --profile dotnet-sampled-thread-time
+# dotnet-trace collect -o ./app-data/trace-gc.nettrace --process-id 1 --duration 00:00:15 --profile gc-verbose
+# dotnet-trace convert ./app-data/trace.nettrace --format Speedscope -o ./app-data/trace.speedscope.json
+# dotnet-trace report ./app-data/trace.nettrace topN -n 10
+#
+# dotnet-gcdump (collect triggers a full GC)
+# dotnet-gcdump collect -o ./app-data/heap.gcdump --process-id 1
+# dotnet-gcdump collect -o ./app-data/heap-verbose.gcdump --process-id 1 --verbose --timeout 60
+# dotnet-gcdump report ./app-data/heap.gcdump
+# dotnet-gcdump report --process-id 1
+# dotnet-gcdump ps
+#
+# dotnet-counters (collect and monitor exit after --duration)
+# dotnet-counters collect -o ./app-data/counters.csv --format csv --process-id 1 --duration 00:00:15
+# dotnet-counters collect -o ./app-data/counters.json --format json --process-id 1 --duration 00:00:15 System.Runtime
+# dotnet-counters monitor --process-id 1 System.Runtime --refresh-interval 1 --duration 00:00:15
+# dotnet-counters ps
+#
+# dotnet-debug (live attach; -c exit returns so docker exec does not stay open)
+# dotnet-debug attach 1 -c clrstack -c exit
+# dotnet-debug attach 1 -c "dumpheap -stat" -c exit
+# dotnet-debug attach 1 -c clrthreads -c exit
+# dotnet-debug attach 1 -c threadpool -c exit
+# dotnet-debug attach 1 -c gcheapstat -c exit
 COPY --chown=contoso:contoso --from=dotnet-tools / /app/dotnet-tools
 
 # The merged folder ships DLLs only. These wrappers let PATH resolve the short names.
