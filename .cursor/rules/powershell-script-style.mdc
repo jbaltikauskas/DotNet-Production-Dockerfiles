@@ -1,0 +1,219 @@
+---
+description: PowerShell script authoring and refactoring standards for this repo
+globs: **/*.ps1
+alwaysApply: false
+---
+
+# PowerShell Script Style
+
+Every new `.ps1` file in this workspace follows the same five-block layout. Keep the order. Do not skip blocks even when they feel small.
+
+## File layout (top to bottom)
+
+1. Comment-based help block (`<# ... #>`) with `.SYNOPSIS`, `.DESCRIPTION`, one `.PARAMETER` per parameter, `.INPUTS`, `.OUTPUTS`, `.NOTES`, two or more `.EXAMPLE` blocks.
+2. `#Requires -Version 7.2` (or whatever minimum the script needs).
+3. `[CmdletBinding()] Param ( ... )` block with one `[Parameter(...)]` attribute per parameter.
+4. Function definitions, each as an advanced function with its own `[CmdletBinding()] Param ( ... )`. After `Param`, use a plain `{ ... }` body, or **`Begin { }` + `Process { }` only.** Do **`not`** use **`End { }`** blocks on functions.
+5. `try { ... } catch { ... }` wrapper that runs the orchestration. The catch prints the exception, prompts the user to close the window, and exits with code 1. After the wrapper, print a success line and prompt to close.
+
+## Block 1: Comment-based help
+
+`.DESCRIPTION` must contain a numbered top-down flow walkthrough so any reader knows what the script does step by step before reading code.
+
+Every parameter you declare must have a matching `.PARAMETER` block. If they drift, the help is wrong.
+
+## Block 2: Requires and error settings
+
+```powershell
+#Requires -Version 7.2
+
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
+```
+
+The `$PSNativeCommandUseErrorActionPreference` line makes native commands (docker, git, icacls) throw on non-zero exit under `Stop`. Keep it.
+
+## Block 3: Param block
+
+Rules for the param block:
+
+- One `[Parameter(...)]` attribute per parameter, with `Mandatory`, `Position` when meaningful, and `HelpMessage`.
+- `[ValidateNotNullOrEmpty()]` on every required string. Use `[ValidateSet(...)]`, `[ValidateRange(...)]`, or `[ValidatePattern(...)]` when applicable.
+- Camel case parameter names match the reference script. Pick one casing and stick with it across the repo so diffs stay clean.
+- Default values go on the parameter line, not in the body.
+- `[switch]` for boolean opt-in flags. `[bool]$Foo = $true` when you need a default-true that the caller can flip with `-Foo:$false`.
+- `[SecureString]` for any secret a user enters. Decode with a small helper, zero the plaintext after use.
+
+## Block 4: Functions
+
+Every function is an advanced function. Use approved verbs (`Get-`, `Set-`, `New-`, `Read-`, `Write-`, `Invoke-`, `Test-`, `Assert-`, `Resolve-`, `Update-`, `Convert-`, `Start-`, `Stop-`). Pascal case for function names.
+
+### Function comment-based help: `.SYNOPSIS`, `.DESCRIPTION`, and `.REMARKS`
+
+Place a `<# ... #>` comment block **immediately inside** the function, before `[CmdletBinding()]` and `Param`.
+
+**Every function** must include all three:
+
+- **`.SYNOPSIS`** — One sentence: what it does.
+
+- **`.DESCRIPTION`** — Purpose, return or output contract, important branches, errors thrown, and non-obvious side effects. Keep the narrative here; do not duplicate the step list (that is `.REMARKS`). For tiny helpers, a single short paragraph is enough.
+
+- **`.REMARKS`** — Numbered steps in execution order (validate, branch, call, return). Omit trace-only steps — for example the standard **`Begin { $PSBoundParameters | Write-Debug }`**, stray `Write-Host` / `Write-Output`, or dumps — unless emitting that output **is** the function's job ( **`Write-Section`** lists the banner **`Write-Host`** sequence). Straight-line helpers may use only one or two steps.
+
+**Secret-handling helpers** must still include all three sections; keep `.DESCRIPTION` and `.REMARKS` minimal (one line each) and do not echo parameters in help text.
+
+Function rules:
+
+- **No `End { }`** on functions — use **`Begin` + `Process`**, or a single **`Process`** with no **`Begin`**, or a plain **`{ }`** body after **`Param`** (no **`Begin`** / **`Process`** keywords).
+
+- Do **not** wrap functions in **`Write-Host`** "**Begin: Name** / **END: Name**" banners per function; reproducibility belongs in **`Write-Debug`**, script-level **`BEGIN: Settings`**, and callers. The template is **`Write-LightRagReadme.ps1`** (see **`Begin`** below).
+
+- **Traceability**: Any advanced function that **declares one or more parameters** must start right after **`Param`** with **`Begin`** and:
+
+    ```powershell
+    Begin {
+        $PSBoundParameters | Out-String | Write-Host
+    }
+    ```
+
+    then put all work inside **`Process { ... }`** (matching **`Write-LightRagReadme.ps1`**). **Exceptions:** Omit this **`Begin`** block when **`Param`** is empty — or when any parameter is **`[SecureString]`** / secret material (those helpers never dump bound parameters).
+
+- **`Process {`**: Put one empty line after the opening brace before the first statement inside the block. Do not put the first statement on the same line as `Process {`.
+
+- **`try {`**: Same as **`Process {`** — one empty line after the opening brace before the first statement inside **`try`**.
+
+- Tiny host-output helpers (for example `Write-Section`) still **`Begin`** then **`Process`** when they declare parameters.
+
+- String encryption/decryption helpers must stay small, must not echo parameters, omit the **`Begin`** trace block above when secrets are bound, and typically use **`Process`** only so secrets never appear in logs.
+- Prefer `throw` over `Write-Error` + `return` so the top-level catch handles it.
+- For native commands, check `$LASTEXITCODE` and throw with the exit code in the message.
+- Name patterns to follow:
+  - `Assert-Foo`: validates a precondition and throws on failure.
+  - `Resolve-Foo`: returns a value (path, config, choice) and throws on ambiguity.
+  - `Get-Foo`: returns data, never throws on "not found" unless that is a true error.
+  - `Test-Foo`: returns `$true` or `$false`, never throws.
+  - `New-Foo`: creates something on disk or in memory and returns it.
+  - `Write-Foo`: writes to disk or to the host. Returns void or the path.
+  - `Read-FooInteractive`: prompts the user and validates the input in a loop.
+
+## Block 5: Try/catch wrapper
+
+The whole orchestration goes in `try { }`. The catch prints diagnostics, asks the user to press Enter, and exits 1. Two `Read-Host` close prompts (one in catch, one after) so the console window stays open whether the run failed or succeeded.
+
+Nested **`try`** blocks use the same rule as **`Process`**: one empty line after **`try {`** before the first inner statement.
+
+## Settings block
+
+Always print a `BEGIN: Settings` / `END: Settings` block before the work starts. The dump of `$PSBoundParameters` makes a CI run reproducible from the log alone. Include any values you computed (resolved paths, picked port) above the dump so the reader sees them too.
+
+## Section banners (multi-step scripts)
+
+When the script has many steps, use a small `Write-Section` helper and call it before each phase. Keep banners short and informative.
+
+## File and IO conventions
+
+- Always `[System.IO.Path]::GetFullPath(...)` user-supplied paths before validating, so error messages show the resolved path.
+- Always use `-LiteralPath` with `Test-Path`, `Get-Content`, and `Set-Content`. Wildcards in user-supplied paths are bugs, not features.
+- Use `Set-Content -Encoding utf8NoBOM -NoNewline` when you write env files, YAML, or anything where a leading BOM would break the consumer.
+- Native commands (docker, icacls, git): use call operator `& docker ...`, then check `$LASTEXITCODE` and throw.
+
+## Secrets
+
+- Never echo a SecureString. Decode just before you need the plaintext, and null the variable right after.
+- String encryption/decryption helper functions must not echo parameters; keep them to a small body or only `Process`.
+- Use this helper unchanged when you need to decode (body and `Process` semantics stay as shown; no **`Begin`** trace — **`Secret`** must never reach **`Write-Debug`**; comment-based help satisfies the three-section rule):
+
+```powershell
+function Convert-SecureStringToPlain () {
+    <#
+    .SYNOPSIS
+        Converts a SecureString to a plain string for brief use.
+
+    .DESCRIPTION
+        Marshal-based decode; caller must zero sensitive plaintext promptly. Never log the result.
+
+    .REMARKS
+        1. Return $null when Secret is missing.
+        2. Decode via BSTR, return plaintext, zero the BSTR in finally.
+    #>
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory = $false, Position = 0)]
+        [SecureString]$Secret
+    )
+
+    Process {
+
+        if (-not $Secret) { return $null }
+        $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($Secret)
+        try {
+
+            return [Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+        }
+        finally {
+            [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+        }
+    }
+}
+```
+
+- Lock the ACL on any file containing plaintext secrets to the current user:
+
+```powershell
+icacls $secretsPath /inheritance:r /grant:r "$($env:USERNAME):(R,W)" | Out-Null
+```
+
+## Interactive prompts
+
+When you prompt the user for a value with a default, show the default and validate the input in a loop.
+
+## Braces and multiline statements
+
+- Always use `{ }` for `if`, `else`, loops, `try`, `catch`, `finally`, and any other block. Even a single statement must live inside a brace-delimited block.
+- Avoid compact inline forms like `if ([string]::IsNullOrWhiteSpace($raw)) { return $Default }`.
+- Prefer the multiline style so the script is easier to read, consistent, and easier to format after edits.
+- Put one empty line before and after conditional and error-handling blocks such as `if`, `try`, `catch`, and `finally`, unless the block is the first or last statement in its parent block. Keep attached block clauses together: do not insert a blank line between `}` and `elseif`, `else`, `catch`, or `finally`.
+- Put one empty line after `Process {` before the first statement inside **`Process`** (see function rules above).
+- Put one empty line after `try {` before the first statement inside **`try`** (see **Block 5**).
+- After any PowerShell script modification, reformat the file so indentation and block structure remain clean.
+
+## Coloring rules
+
+Match the reference exactly so logs look the same across scripts:
+
+- `Yellow` for section banners and warnings.
+- `Cyan` for headers inside a section, URLs, and generated keys you want the user to copy.
+- `Green` for "this command/check passed".
+- `Red` for the final "Script failed to execute." line.
+- `DarkGray` for hint text under a header.
+
+## What NOT to do
+
+- Do not skip the help block "because the script is small". Future readers count on it.
+- Do not add **`End { }`** to functions.
+
+- Do not use per-function **Begin**/END **`Write-Host`** banners (those are noisy; trace with **`Begin { $PSBoundParameters | Out-String | Write-Host }`** and script-level **`BEGIN: Settings`** instead).
+- Do not mix Pascal case and camel case inside one script. Pick one (this workspace uses camel case for parameters, Pascal for functions) and stick to it.
+- Do not call `exit` or `return` from inside a function as the failure path. `throw` and let the top-level catch format the error.
+- Do not use `Write-Error` for control flow. It is for diagnostics inside the catch.
+- Do not use legacy aliases (`gci`, `?`, `%`, `select`, `where`). Spell out the cmdlet.
+- Always use `{ }` for `if`, `else`, loops, `try`, `catch`, `finally`, and any other block, even for a single statement.
+- Avoid compact inline forms like `if ([string]::IsNullOrWhiteSpace($raw)) { return $Default }`.
+- Do not crowd conditional or error-handling blocks against surrounding statements; keep one empty line before and after `if`, `try`, `catch`, and `finally` blocks, except at the start or end of the parent block and before attached `elseif`, `else`, `catch`, or `finally`.
+- Do not crowd **`Process`** or **`try`** — keep one empty line after `Process {` or `try {` before the first inner statement.
+- Prefer the multiline block style so the script is easier to read and easier to format after edits.
+- Do not put logic outside the `try { }` wrapper at the bottom of the script. The only things below the catch are the success message and the final `Read-Host`.
+
+## Quick checklist before you ship a new PS script
+
+1. Help block has `.SYNOPSIS`, `.DESCRIPTION` (with numbered flow), one `.PARAMETER` per parameter, `.INPUTS`, `.OUTPUTS`, `.NOTES`, two or more `.EXAMPLE`.
+2. `#Requires -Version`, `$ErrorActionPreference = 'Stop'`, `$PSNativeCommandUseErrorActionPreference = $true` are set.
+3. Every parameter has `[Parameter(...)]` with `HelpMessage` and an appropriate `Validate*` attribute.
+4. Every function is an advanced function (`[CmdletBinding()]` + `Param`). **No `End` blocks.** Functions with ≥1 parameter (non-secret) use **`Begin` + `Write-Debug`** on **`$PSBoundParameters`** then **`Process`**, matching **`Write-LightRagReadme.ps1`**. After **`Process {`**, one empty line before the first inner statement.
+5. Every function has comment-based help with **`.SYNOPSIS`**, **`.DESCRIPTION`**, and **`.REMARKS`** (see **Function comment-based help**). In `.REMARKS`, skip printing-only steps unless that is the function's contract.
+6. The orchestration lives in one `try { ... }` block. After every **`try {`**, one empty line before the first inner statement (including nested **`try`**).
+7. The catch prints exception type and message, then `Read-Host`, then `EXIT 1`.
+8. After the wrapper, you print "Script executed successfully." in Green and a final `Read-Host`.
+9. Native command exit codes are checked and thrown.
+10. Secrets are SecureString end-to-end, decoded only at the point of use.
+

@@ -1,0 +1,12 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+  </Configurations>
+  <Folder Name="/build/">
+    <File Path="../.ps/.dotnet-tools-TestApp-build.ps1" />
+    <File Path="../01-Step--DotNetBuild-Debug.bat" />
+  </Folder>
+  <Project Path="DotNet-Tools-TestApp.csproj">
+    <Platform Project="x64" />
+  </Project>
+</Solution>

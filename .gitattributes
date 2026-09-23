@@ -1,0 +1,3 @@
+# Heredocs in Dockerfiles are passed to the shell literally. core.autocrlf
+# would check them out as CRLF and break RUN <<EOF on Linux.
+dockerfiles/**/Dockerfile text eol=lf

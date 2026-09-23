@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>DotNet.Tools.TestApp</RootNamespace>
+    <AssemblyName>DotNet-Tools-TestApp</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!-- x64 only -->
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
+
+    <!-- Keep symbols so dotnet-trace / dotnet-debug produce useful stacks -->
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <TieredCompilation>true</TieredCompilation>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Embed the ~10MB JSON dataset as a resource -->
+    <EmbeddedResource Include="Resources\people.json">
+      <LogicalName>DotNet.Tools.TestApp.Resources.people.json</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>
