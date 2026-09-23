@@ -2,19 +2,19 @@
 
 This repository provides enterprise, production-ready Dockerfile examples for .NET 10 base images, with **Alpine Linux as the primary, recommended choice**:
 
-- **Alpine Linux (Primary Choice)**: [`dockerfiles/alpine/10/dockerfile`](dockerfiles/alpine/10/dockerfile) — Minimal footprint (~45 MB), musl libc, full ICU globalization pre-configured, shell/apk for easy debugging, and diagnostic CLIs under `/app/dotnet-tools`.
-- **Ubuntu Noble (24.04 LTS, Secondary Choice)**: [`dockerfiles/ubuntu/10/dockerfile`](dockerfiles/ubuntu/10/dockerfile) — Full glibc runtime, shell access, package manager (`apt`), and broad native library compatibility.
-- **Ubuntu Chiseled (Last-Resort Distroless Alternative)**: [`dockerfiles/ubuntu-chiseled/10/dockerfile`](dockerfiles/ubuntu-chiseled/10/dockerfile) — Ultra-minimal distroless runtime, zero shell, no package manager, and minimal CVE attack surface. **Trade-off:** runs as non-root by default (`APP_UID=7777`) with no shell of any kind (no `bash`, `sh`, or `dash`) and no `apt`/`apk` — verified in our [Chiseled Dockerfile](dockerfiles/ubuntu-chiseled/10/dockerfile). That lockdown is exactly what makes it secure, but it also makes it **extremely difficult to troubleshoot .NET memory leaks, GC pressure, thread starvation, or other runtime issues in Dev/QA** — no `docker exec` into a shell. The diagnostic CLIs are present under `/app/dotnet-tools`, but with no shell you still need an ephemeral debug sidecar or a rebuild against a full-shell image to run them. Only justify this option when the security posture demands it — for example, a hardened login/authentication microservice, a token issuer, or a workload under a strict distroless compliance mandate. Default services should use [Alpine](#alpine-linux-primary-choice) (primary) or [Ubuntu Noble](#ubuntu-noble-secondary-choice) (secondary) instead.
+- **Alpine Linux (Primary Choice)**: [`dockerfiles/alpine/10/Dockerfile`](dockerfiles/alpine/10/Dockerfile) — Minimal footprint (~45 MB), musl libc, full ICU globalization pre-configured, shell/apk for easy debugging, and diagnostic CLIs under `/app/dotnet-tools`.
+- **Ubuntu Noble (24.04 LTS, Secondary Choice)**: [`dockerfiles/ubuntu/10/Dockerfile`](dockerfiles/ubuntu/10/Dockerfile) — Full glibc runtime, shell access, package manager (`apt`), and broad native library compatibility.
+- **Ubuntu Chiseled (Last-Resort Distroless Alternative)**: [`dockerfiles/ubuntu-chiseled/10/Dockerfile`](dockerfiles/ubuntu-chiseled/10/Dockerfile) — Ultra-minimal distroless runtime, zero shell, no package manager, and minimal CVE attack surface. **Trade-off:** runs as non-root by default (`APP_UID=7777`) with no shell of any kind (no `bash`, `sh`, or `dash`) and no `apt`/`apk` — verified in our [Chiseled Dockerfile](dockerfiles/ubuntu-chiseled/10/Dockerfile). That lockdown is exactly what makes it secure, but it also makes it **extremely difficult to troubleshoot .NET memory leaks, GC pressure, thread starvation, or other runtime issues in Dev/QA** — no `docker exec` into a shell. The diagnostic CLIs are present under `/app/dotnet-tools`, but with no shell you still need an ephemeral debug sidecar or a rebuild against a full-shell image to run them. Only justify this option when the security posture demands it — for example, a hardened login/authentication microservice, a token issuer, or a workload under a strict distroless compliance mandate. Default services should use [Alpine](#alpine-linux-primary-choice) (primary) or [Ubuntu Noble](#ubuntu-noble-secondary-choice) (secondary) instead.
 
 > **Note:** This repository is an example and reference repository. Do not edit or build directly within this repository for your organization.
 
 ### Turnkey Adoption: Copy & Replace
 
-> **What is `contoso`?** `Contoso` (lowercase `contoso` in identifiers) is Microsoft's standard, universally-recognized fictional enterprise placeholder — the same one used across Microsoft Learn, Azure, .NET, and Microsoft 365 documentation for sample code, tenants, users, and organizations. See the [Microsoft Writing Style Guide: Fictitious names](https://learn.microsoft.com/style-guide/a-z-word-list-term-collections/term-collections/fictitious-names). We use it here so every reference is obviously a placeholder that you own the responsibility to replace with your real organization's name.
+> **What is `contoso`?** `Contoso` (lowercase `contoso` in identifiers) is Microsoft's standard, universally-recognized fictional enterprise placeholder — the same one used across Microsoft Learn, Azure, .NET, and Microsoft 365 documentation for sample code, tenants, users, and organizations. See [Microsoft 365 for enterprise for the Contoso Corporation](https://learn.microsoft.com/en-us/microsoft-365/enterprise/contoso-case-study?view=o365-worldwide). We use it here so every reference is obviously a placeholder that you own the responsibility to replace with your real organization's name.
 
 These Dockerfiles are fully production-ready out of the box. Adopting them in your client or organizational projects requires just two steps:
 
-1. **Copy & Paste**: Copy the desired Dockerfile ([Alpine](dockerfiles/alpine/10/dockerfile), [Ubuntu](dockerfiles/ubuntu/10/dockerfile), or [Ubuntu Chiseled](dockerfiles/ubuntu-chiseled/10/dockerfile)) into your own project repository.
+1. **Copy & Paste**: Copy the desired Dockerfile ([Alpine](dockerfiles/alpine/10/Dockerfile), [Ubuntu](dockerfiles/ubuntu/10/Dockerfile), or [Ubuntu Chiseled](dockerfiles/ubuntu-chiseled/10/Dockerfile)) into your own project repository.
 2. **Search & Replace**: Open the Dockerfile in your text editor and do a case-sensitive find-and-replace:
    - Replace `contoso` (lowercase) with your organization's lowercase identifier (e.g., `acme`) — used in image tags, LABEL keys, and the non-root Linux user/group name (Docker image names and Linux user names must be lowercase).
    - Replace `Contoso` (title case) with your organization's display name (e.g., `Acme, Inc.`) — used in maintainer strings, human-readable descriptions, and comments.
@@ -53,7 +53,7 @@ COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "MyApp.dll"]
 ```
 
-That skips the layer most organizations need first: a **company base image** built on top of Microsoft's runtime (hardening, users, env defaults, CA certs, diagnostic CLIs). This repo documents how to choose among Microsoft's .NET 10 bases (Alpine, Ubuntu Noble, Ubuntu Chiseled) and provides the wrapper Dockerfiles that produce that company base — for example `dockerfiles/alpine/10/dockerfile`. Application Dockerfiles should then look like this instead:
+That skips the layer most organizations need first: a **company base image** built on top of Microsoft's runtime (hardening, users, env defaults, CA certs, diagnostic CLIs). This repo documents how to choose among Microsoft's .NET 10 bases (Alpine, Ubuntu Noble, Ubuntu Chiseled) and provides the wrapper Dockerfiles that produce that company base — for example `dockerfiles/alpine/10/Dockerfile`. Application Dockerfiles should then look like this instead:
 
 ```dockerfile
 FROM contoso/alpine-net-dotnet-tools-10:latest AS base
@@ -284,14 +284,14 @@ This repository builds **three** .NET 10 wrapper images on top of the Microsoft 
 
 | Image                                          | Role                               | Source Dockerfile                                                                        | Based on                                              |
 | ---------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `ghcr.io/jbaltikauskas/alpine-net-dotnet-tools-10`          | **Primary Base (Production)**      | `[dockerfiles/alpine/10/dockerfile](dockerfiles/alpine/10/dockerfile)`                   | `mcr.microsoft.com/dotnet/aspnet:10.0-alpine`         |
-| `ghcr.io/jbaltikauskas/ubuntu-net-dotnet-tools-10`          | Secondary Base (Full Ubuntu)       | `[dockerfiles/ubuntu/10/dockerfile](dockerfiles/ubuntu/10/dockerfile)`                   | `mcr.microsoft.com/dotnet/aspnet:10.0-noble`          |
-| `ghcr.io/jbaltikauskas/ubuntu-chiseled-net-dotnet-tools-10` | Last-Resort Base (Distroless)      | `[dockerfiles/ubuntu-chiseled/10/dockerfile](dockerfiles/ubuntu-chiseled/10/dockerfile)` | `mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled` |
+| `ghcr.io/jbaltikauskas/alpine-net-dotnet-tools-10`          | **Primary Base (Production)**      | [`dockerfiles/alpine/10/Dockerfile`](dockerfiles/alpine/10/Dockerfile)                   | `mcr.microsoft.com/dotnet/aspnet:10.0-alpine`         |
+| `ghcr.io/jbaltikauskas/ubuntu-net-dotnet-tools-10`          | Secondary Base (Full Ubuntu)       | [`dockerfiles/ubuntu/10/Dockerfile`](dockerfiles/ubuntu/10/Dockerfile)                   | `mcr.microsoft.com/dotnet/aspnet:10.0-noble`          |
+| `ghcr.io/jbaltikauskas/ubuntu-chiseled-net-dotnet-tools-10` | Last-Resort Base (Distroless)      | [`dockerfiles/ubuntu-chiseled/10/Dockerfile`](dockerfiles/ubuntu-chiseled/10/Dockerfile) | `mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled` |
 
 
 ### Diagnostic CLIs
 
-Every Dockerfile builds one image, target `final`, tagged `:latest`. That stage copies `dockerfiles/.dotnet-tools` (`dotnet-debug`, `dotnet-gcdump`, and `dotnet-trace`) onto `/app/dotnet-tools` and prepends that directory to `PATH`. Run [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) before the image build so the tools folder exists. `[alpine/10](dockerfiles/alpine/10/dockerfile)` publishes `contoso/alpine-net-dotnet-tools-10:latest`, `[ubuntu/10](dockerfiles/ubuntu/10/dockerfile)` publishes `contoso/ubuntu-net-dotnet-tools-10:latest`, and `[ubuntu-chiseled/10](dockerfiles/ubuntu-chiseled/10/dockerfile)` publishes `contoso/ubuntu-chiseled-net-dotnet-tools-10:latest`.
+Every Dockerfile builds one image, target `final`, tagged `:latest`. That stage copies `dockerfiles/.dotnet-tools` (`dotnet-debug`, `dotnet-gcdump`, and `dotnet-trace`) onto `/app/dotnet-tools` and prepends that directory to `PATH`. Run [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) before the image build so the tools folder exists. [`alpine/10`](dockerfiles/alpine/10/Dockerfile) publishes `contoso/alpine-net-dotnet-tools-10:latest`, [`ubuntu/10`](dockerfiles/ubuntu/10/Dockerfile) publishes `contoso/ubuntu-net-dotnet-tools-10:latest`, and [`ubuntu-chiseled/10`](dockerfiles/ubuntu-chiseled/10/Dockerfile) publishes `contoso/ubuntu-chiseled-net-dotnet-tools-10:latest`.
 
 
 | Input            | Default | Effect                                                                                                            |
@@ -302,19 +302,19 @@ Every Dockerfile builds one image, target `final`, tagged `:latest`. That stage 
 
 ```bash
 # Alpine — primary, tagged latest
-docker build -f dockerfiles/alpine/10/dockerfile \
+docker build -f dockerfiles/alpine/10/Dockerfile \
   --target final \
   --build-context dotnet-tools=dockerfiles/.dotnet-tools \
   -t contoso/alpine-net-dotnet-tools-10:latest dockerfiles/alpine/10
 
 # Ubuntu Noble — secondary, tagged latest
-docker build -f dockerfiles/ubuntu/10/dockerfile \
+docker build -f dockerfiles/ubuntu/10/Dockerfile \
   --target final \
   --build-context dotnet-tools=dockerfiles/.dotnet-tools \
   -t contoso/ubuntu-net-dotnet-tools-10:latest dockerfiles/ubuntu/10
 ```
 
-Published via `[.github/workflows/docker-alpine.yml](.github/workflows/docker-alpine.yml)`, `[.github/workflows/docker-ubuntu.yml](.github/workflows/docker-ubuntu.yml)`, and `[.github/workflows/docker-ubuntu-chisel.yml](.github/workflows/docker-ubuntu-chisel.yml)`. Each workflow tags the image `latest` and with a UTC publish stamp.
+Published via [`.github/workflows/docker-alpine.yml`](.github/workflows/docker-alpine.yml), [`.github/workflows/docker-ubuntu.yml`](.github/workflows/docker-ubuntu.yml), and [`.github/workflows/docker-ubuntu-chisel.yml`](.github/workflows/docker-ubuntu-chisel.yml). Each workflow tags the image `latest` and with a UTC publish stamp.
 
 What each wrapper adds on top of the upstream Microsoft image:
 
@@ -328,7 +328,7 @@ What each wrapper adds on top of the upstream Microsoft image:
 
 #### Copy-paste commands
 
-Run these inside the container (`docker exec`) after the app is up. `WORKDIR` is `/app`, so `./app-data` is `/app/app-data`. When a command needs a process, it is PID 1 (the app). `dotnet-debug` takes that id as a positional argument. The same lines are written to `tests/.build/.DotNet-Tools-Commands.txt` by [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1) before any image build, and they are commented above the `/app/app-data` copy in [`dockerfiles/alpine/10/dockerfile`](dockerfiles/alpine/10/dockerfile).
+Run these inside the container (`docker exec`) after the app is up. `WORKDIR` is `/app`, so `./app-data` is `/app/app-data`. When a command needs a process, it is PID 1 (the app). `dotnet-debug` takes that id as a positional argument. The same lines are written to `tests/.build/.DotNet-Tools-Commands.txt` by [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1) before any image build, and they are commented above the `/app/app-data` copy in [`dockerfiles/alpine/10/Dockerfile`](dockerfiles/alpine/10/Dockerfile).
 
 `dotnet-trace` collect with no `--profile` uses `dotnet-common` and `dotnet-sampled-thread-time`. The CPU line asks for sampled thread time only. The GC line uses `gc-verbose`. `convert` and `report topN` read the file the first command wrote. The old `cpu-sampling` profile is not used.
 
@@ -444,19 +444,19 @@ Local tags below are for development only. Published image names are the `ghcr.i
 
 ```bash
 # Alpine .NET 10 (Primary) — always :latest
-docker build -f dockerfiles/alpine/10/dockerfile \
+docker build -f dockerfiles/alpine/10/Dockerfile \
   --target final \
   --build-context dotnet-tools=dockerfiles/.dotnet-tools \
   -t contoso/alpine-net-dotnet-tools-10:latest dockerfiles/alpine/10
 
 # Ubuntu Noble .NET 10 (Secondary) — always :latest
-docker build -f dockerfiles/ubuntu/10/dockerfile \
+docker build -f dockerfiles/ubuntu/10/Dockerfile \
   --target final \
   --build-context dotnet-tools=dockerfiles/.dotnet-tools \
   -t contoso/ubuntu-net-dotnet-tools-10:latest dockerfiles/ubuntu/10
 
 # Ubuntu Noble Chiseled .NET 10 (Last-resort distroless) — always :latest
-docker build -f dockerfiles/ubuntu-chiseled/10/dockerfile \
+docker build -f dockerfiles/ubuntu-chiseled/10/Dockerfile \
   --target final \
   --build-context dotnet-tools=dockerfiles/.dotnet-tools \
   -t contoso/ubuntu-chiseled-net-dotnet-tools-10:latest dockerfiles/ubuntu-chiseled/10

@@ -17,7 +17,7 @@ env:
   # Image path: ghcr.io/<repository_owner>/<IMAGE_NAME> (not the Git repo name)
   IMAGE_NAME: ubuntu-chiseled-net-dotnet-tools-10
 
-  DOCKERFILE: ./dockerfiles/ubuntu-chiseled/10/dockerfile
+  DOCKERFILE: ./dockerfiles/ubuntu-chiseled/10/Dockerfile
 
   DOCKER_BUILD_CONTEXT: ./dockerfiles/ubuntu-chiseled/10
 

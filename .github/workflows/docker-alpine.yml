@@ -15,7 +15,7 @@ env:
 
   IMAGE_NAME: alpine-net-dotnet-tools-10
 
-  DOCKERFILE: ./dockerfiles/alpine/10/dockerfile
+  DOCKERFILE: ./dockerfiles/alpine/10/Dockerfile
 
   DOCKER_BUILD_CONTEXT: ./dockerfiles/alpine/10
 
