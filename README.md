@@ -1,5 +1,7 @@
 # DotNet-Production-Dockerfiles
 
+Starting every application Dockerfile from Microsoft's runtime the way the samples do — `FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base`, then `USER app`, `WORKDIR /app`, `EXPOSE 8080` and way more — does not scale when an enterprise maintains many images. Split production into two steps. The first step takes the Microsoft image and adds the dependencies, settings, and hardening the company requires, including .NET diagnostic tools for troubleshooting; that build produces the company's base images, and applications later choose among all three (Alpine, Ubuntu Noble, and Ubuntu Chiseled). The second step only copies the company's published build artifacts onto the chosen base.
+
 This repository provides enterprise, production-ready Dockerfile examples for .NET 10 base images, with **Alpine Linux as the primary, recommended choice**:
 
 - **Alpine Linux (Primary Choice)**: [`dockerfiles/alpine/10/Dockerfile`](dockerfiles/alpine/10/Dockerfile) — Minimal footprint (~45 MB), musl libc, full ICU globalization pre-configured, shell/apk for easy debugging, and diagnostic CLIs under `/app/dotnet-tools`.
