@@ -425,13 +425,29 @@ Each base image is tagged `:latest` and already includes the diagnostic CLIs. Se
 
 ---
 
+## Prerequisites
+
+Local builds need PowerShell and Docker Desktop.
+
+### PowerShell
+
+The image-build scripts and the diagnostic tools merge script run on PowerShell 7 (`pwsh`). Install it as a .NET global tool:
+
+```powershell
+dotnet tool install --global PowerShell
+```
+
+Open a new terminal after the install so `pwsh` is on `PATH`.
+
+### Docker Desktop
+
+Install [Docker Desktop for Windows](https://docs.docker.com/desktop/setup/install/windows-install/). Docker Desktop supplies Docker Engine with BuildKit, including `docker buildx`, which every Dockerfile and build script in this repository uses.
+
+Git is required to clone the repository. A GitHub account or token is required only when you push images to GHCR (`ghcr.io`).
+
+---
+
 ## Getting started
-
-### Prerequisites
-
-- Docker Engine with BuildKit (`docker buildx` available).
-- Git.
-- A GitHub account or token only if you plan to push to GHCR (`ghcr.io`).
 
 ### Clone
 
@@ -442,7 +458,11 @@ cd DotNet-Production-Dockerfiles
 
 ### Local build
 
-Local tags below are for development only. Published image names are the `ghcr.io/jbaltikauskas/...` paths.
+Two ways produce the same local `:latest` tags. Those tags are for development only. Published image names are the `ghcr.io/jbaltikauskas/...` paths.
+
+#### In the terminal
+
+Type `docker build` yourself:
 
 ```bash
 # Alpine .NET 10 (Primary) — always :latest
@@ -463,6 +483,25 @@ docker build -f dockerfiles/ubuntu-chiseled/10/Dockerfile \
   --build-context dotnet-tools=dockerfiles/.dotnet-tools \
   -t contoso/ubuntu-chiseled-net-dotnet-tools-10:latest dockerfiles/ubuntu-chiseled/10
 ```
+
+#### Or run the PowerShell scripts
+
+From the repository root in `pwsh`, the scripts apply the same `docker buildx` flags as the commands above:
+
+```powershell
+# All three base images (Alpine, Ubuntu Noble, Ubuntu Chiseled)
+.\Image-Build-All.ps1
+
+# One distro
+.\Image-Build-Alpine.ps1
+.\Image-Build-Ubuntu.ps1
+.\Image-Build-Ubuntu-Chiseled.ps1
+
+# Those three base images, plus the diagnostic test-app images and detached containers
+.\Image-TestBuild-DotNet-Tools-TestApp.ps1
+```
+
+Parameters and per-script workflows are in [Building images on your local machine (PowerShell)](#building-images-on-your-local-machine-powershell). [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1) is covered with [DotNet-Tools-TestApp](#dotnet-tools-testapp).
 
 ### Smoke check
 
@@ -551,7 +590,7 @@ Build, self-contained publish, and attach commands (`dotnet-trace`, `dotnet-gcdu
 
 ## Building images on your local machine (PowerShell)
 
-The repository ships four PowerShell 7.2+ scripts that wrap `docker buildx build` with the exact `--target`, `--build-arg`, `--build-context`, and tagging conventions documented in each Dockerfile. Use these instead of hand-typed `docker build` lines so local builds stay in sync with CI.
+The repository ships PowerShell 7.2+ scripts that wrap `docker buildx build` with the same `--target`, `--build-arg`, `--build-context`, and tagging as the [terminal commands](#in-the-terminal) in Getting started. Run a script when you want those flags applied for you.
 
 | Script                              | Purpose                                    | Produces                                                                  |
 | ----------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------- |
@@ -559,6 +598,7 @@ The repository ships four PowerShell 7.2+ scripts that wrap `docker buildx build
 | [`Image-Build-Alpine.ps1`](Image-Build-Alpine.ps1)                     | Alpine only (**primary**)                  | `contoso/alpine-net-dotnet-tools-10:latest`              |
 | [`Image-Build-Ubuntu.ps1`](Image-Build-Ubuntu.ps1)                     | Ubuntu Noble only (secondary)              | `contoso/ubuntu-net-dotnet-tools-10:latest`              |
 | [`Image-Build-Ubuntu-Chiseled.ps1`](Image-Build-Ubuntu-Chiseled.ps1)            | Ubuntu Chiseled only (last-resort)         | `contoso/ubuntu-chiseled-net-dotnet-tools-10:latest` |
+| [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1) | The three tools images, then the test-app images, then detached containers | `contoso/*-net-dotnet-tools-10:latest` and `contoso/*-net-dotnet-tools-testapp-10:latest` |
 
 `Image-Build-All.ps1` is a thin orchestrator: it invokes `Image-Build-Alpine.ps1`, `Image-Build-Ubuntu.ps1`, and `Image-Build-Ubuntu-Chiseled.ps1` in that order, forwarding `-NoCache`. It builds no images itself and stops immediately if any per-distro script fails. Use a per-distro script directly when you need to build a single distro.
 
@@ -574,15 +614,17 @@ Reusable helper functions live under [`.ps/ImageBuild/Core/`](.ps/ImageBuild/Cor
 
 ### Prerequisites
 
-- PowerShell 7.2 or later (`pwsh`).
-- Docker Engine with BuildKit (`docker buildx` on PATH).
+See [Prerequisites](#prerequisites).
+
+- PowerShell 7.2 or later (`pwsh`), installed with `dotnet tool install --global PowerShell`.
+- [Docker Desktop for Windows](https://docs.docker.com/desktop/setup/install/windows-install/) with BuildKit (`docker buildx` on PATH).
 - Run [`.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) first to populate `dockerfiles/.dotnet-tools`. See [Diagnostic tools build](#diagnostic-tools-build). Every image build copies that folder.
 
 ### Parameters
 
 | Parameter  | Values                          | Default | Effect                                                                                                    |
 | ---------- | ------------------------------- | ------- | --------------------------------------------------------------------------------------------------------- |
-| `-NoCache` | `$true`, `$false`               | `$true` | Shared by all four scripts. `Image-Build-All.ps1` forwards it verbatim to each per-distro script. `$true` passes `--no-cache` (matches the Copy-and-Paste examples in each Dockerfile). |
+| `-NoCache` | `$true`, `$false`               | `$true` | Shared by the build scripts, including [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1). `Image-Build-All.ps1` forwards it verbatim to each per-distro script. `$true` passes `--no-cache` (matches the Copy-and-Paste examples in each Dockerfile). |
 | `-WaitOnExit` | switch                       | off     | **Only on the three per-distro scripts.** Waits for Enter after success or failure so a double-clicked window stays open. Omit it in a terminal or CI run. `Image-Build-All.ps1` does not accept it. |
 
 ### Usage examples
@@ -615,6 +657,15 @@ Thin orchestrator that runs the three per-distro scripts below in order (Alpine,
 ```powershell
 .\Image-Build-Ubuntu-Chiseled.ps1
 .\Image-Build-Ubuntu-Chiseled.ps1 -NoCache:$false
+```
+
+#### Tools images and the test app — [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1)
+
+Builds the three tools images, the three test-app images, and starts those containers detached. See [DotNet-Tools-TestApp](#dotnet-tools-testapp).
+
+```powershell
+.\Image-TestBuild-DotNet-Tools-TestApp.ps1
+.\Image-TestBuild-DotNet-Tools-TestApp.ps1 -NoCache:$false
 ```
 
 ### Typical local workflows
