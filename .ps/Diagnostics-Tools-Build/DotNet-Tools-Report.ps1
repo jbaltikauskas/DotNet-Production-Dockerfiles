@@ -9,7 +9,8 @@
         1. Resolve the tools folder and the report path.
         2. Load helper functions from Core.
         3. Print the settings block.
-        4. Enumerate every file under the tools folder, recursively.
+        4. Enumerate every file under the tools folder, recursively, skipping
+           the report file itself.
         5. For each file, collect size, SHA-256, Win32 version resource, and
            Authenticode signer (Windows only).
         6. For each *.dll, read .NET assembly metadata without loading it:
@@ -21,16 +22,16 @@
         8. Record files that cannot be read as warnings instead of failing.
         9. Build the markdown report and write it as UTF-8 without BOM.
 
-    The default report path is dockerfiles\.build\dotnet-tools-report.md.
-    It is kept out of dockerfiles\.dotnet-tools because that folder is copied
-    into the images.
+    DotNet-Tools.ps1 writes the same report automatically after it publishes
+    dockerfiles\.dotnet-tools. Run this script to regenerate it on its own.
 
 .PARAMETER ToolsDirectory
     Folder to scan. Defaults to dockerfiles\.dotnet-tools under the repository root.
 
 .PARAMETER OutputPath
-    Markdown file to write. Defaults to dockerfiles\.build\dotnet-tools-report.md
-    under the repository root. The parent folder is created when missing.
+    Markdown file to write. Defaults to
+    dockerfiles\.dotnet-tools\dotnet-assembly-report.md under the repository
+    root. The parent folder is created when missing.
 
 .PARAMETER WaitOnExit
     When set, waits for Enter after success or failure so a double-clicked
@@ -50,7 +51,7 @@
 
 .EXAMPLE
     PS> .\.ps\Diagnostics-Tools-Build\DotNet-Tools-Report.ps1
-    Scans dockerfiles\.dotnet-tools and writes dockerfiles\.build\dotnet-tools-report.md.
+    Scans dockerfiles\.dotnet-tools and writes dockerfiles\.dotnet-tools\dotnet-assembly-report.md.
 
 .EXAMPLE
     PS> .\.ps\Diagnostics-Tools-Build\DotNet-Tools-Report.ps1 -ToolsDirectory .\dockerfiles\.build\dotnet-tools -OutputPath .\docs\dotnet-tools-report.md
@@ -72,7 +73,7 @@ Param (
     [Parameter(Mandatory = $false, Position = 1, HelpMessage = 'Markdown report file to write.')]
     [ValidateNotNullOrEmpty()]
     [ValidatePattern('\.md$')]
-    [string]$OutputPath = (Join-Path $PSScriptRoot '..\..\dockerfiles\.build\dotnet-tools-report.md'),
+    [string]$OutputPath = (Join-Path $PSScriptRoot '..\..\dockerfiles\.dotnet-tools\dotnet-assembly-report.md'),
 
     [Parameter(Mandatory = $false, HelpMessage = 'Wait for Enter before exiting.')]
     [switch]$WaitOnExit
@@ -87,10 +88,6 @@ try {
     $outputFilePath = [System.IO.Path]::GetFullPath($OutputPath)
     $corePath = Join-Path $PSScriptRoot 'Core'
 
-    if (-not (Test-Path -LiteralPath $toolsDirectoryPath -PathType Container)) {
-        throw "Tools folder was not found: '$toolsDirectoryPath'. Run DotNet-Tools.ps1 first."
-    }
-
     Write-Output "Loading module files:"
 
     $moduleFiles = @(
@@ -98,6 +95,7 @@ try {
         'Get-DotNetToolsFileInfo.ps1'
         'New-DotNetToolsMarkdownTable.ps1'
         'ConvertTo-DotNetToolsMarkdownReport.ps1'
+        'Write-DotNetToolsAssemblyReport.ps1'
     )
 
     foreach ($moduleFileName in $moduleFiles) {
@@ -118,40 +116,12 @@ try {
     Write-Output "---------------------------- END: Settings ----------------------------"
     Write-Output ""
 
-    $sourceFiles = @(Get-ChildItem -LiteralPath $toolsDirectoryPath -File -Recurse)
-    Write-Host "Scanning $($sourceFiles.Count) files:" -ForegroundColor Green
-
-    $files = [System.Collections.Generic.List[object]]::new()
-    $failures = [System.Collections.Generic.List[object]]::new()
-
-    foreach ($sourceFile in $sourceFiles) {
-        try {
-
-            $files.Add((Get-DotNetToolsFileInfo -Path $sourceFile.FullName -RootDirectory $toolsDirectoryPath))
-        }
-        catch {
-            $relativePath = [System.IO.Path]::GetRelativePath($toolsDirectoryPath, $sourceFile.FullName).Replace('\', '/')
-            Write-Host "  Could not read ${relativePath}: $($_.Exception.Message)" -ForegroundColor Yellow
-            $failures.Add([pscustomobject]@{ RelativePath = $relativePath; Message = $_.Exception.Message })
-        }
-    }
-
-    $managedCount = @($files | Where-Object { $_.Kind -eq 'Managed assembly' }).Count
-    Write-Host "Done scanning: $managedCount managed assemblies, $($files.Count - $managedCount) other files, $($failures.Count) unreadable." -ForegroundColor Green
+    Write-Host "Writing assembly report:" -ForegroundColor Green
+    $result = Write-DotNetToolsAssemblyReport -ToolsDirectory $toolsDirectoryPath -OutputPath $outputFilePath
+    Write-Host "Done writing assembly report: $($result.ManagedCount) managed assemblies, $($result.OtherCount) other files, $($result.UnreadableCount) unreadable." -ForegroundColor Green
     Write-Output ""
 
-    Write-Host "Writing report:" -ForegroundColor Green
-    $report = ConvertTo-DotNetToolsMarkdownReport `
-        -Files $files.ToArray() `
-        -Failures $failures.ToArray() `
-        -ToolsDirectory $toolsDirectoryPath
-
-    New-Item -ItemType Directory -Path (Split-Path -Parent $outputFilePath) -Force | Out-Null
-    Set-Content -LiteralPath $outputFilePath -Value $report -Encoding utf8NoBOM -NoNewline
-    Write-Host "Done writing report." -ForegroundColor Green
-    Write-Output ""
-
-    Write-Host "Report is in $outputFilePath" -ForegroundColor Cyan
+    Write-Host "Report is in $($result.ReportPath)" -ForegroundColor Cyan
 }
 catch {
 

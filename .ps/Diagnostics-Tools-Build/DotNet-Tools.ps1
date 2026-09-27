@@ -19,6 +19,8 @@
        11. Delete win* and browser subfolders from dockerfiles\.build\dotnet-tools\runtimes.
        12. Create dockerfiles\.dotnet-tools, or clear it when it already exists.
        13. Copy dockerfiles\.build\dotnet-tools into dockerfiles\.dotnet-tools.
+       14. Scan dockerfiles\.dotnet-tools and write the assembly version report
+           to dockerfiles\.dotnet-tools\dotnet-assembly-report.md.
 
     Image-Build-All.ps1 and Image-TestBuild-DotNet-Tools-TestApp.ps1 invoke
     this script before any image build. Each per-distro script invokes it
@@ -33,8 +35,9 @@
     None. Package ids are fixed in this script.
 
 .OUTPUTS
-    Host messages, files under dockerfiles\.build, and the merged tree in
-    dockerfiles\.dotnet-tools. Exit code 0 on success; exit code 1 on failure.
+    Host messages, files under dockerfiles\.build, the merged tree in
+    dockerfiles\.dotnet-tools, and dotnet-assembly-report.md in that folder.
+    Exit code 0 on success; exit code 1 on failure.
 
 .NOTES
     Requires PowerShell 7.2+ and network access to NuGet.
@@ -93,6 +96,7 @@ try {
 
     $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $scriptRoot '..\..'))
     $dockerfilesToolDirectory = Join-Path $repositoryRoot 'dockerfiles\.dotnet-tools'
+    $assemblyReportPath = Join-Path $dockerfilesToolDirectory 'dotnet-assembly-report.md'
 
     Write-Output "Loading module files:"
 
@@ -107,6 +111,11 @@ try {
         'Core\Get-DotNetToolsNuGetVersion.ps1'
         'Core\Save-DotNetToolsNuGetPackage.ps1'
         'Core\Expand-DotNetToolsNuGetPackage.ps1'
+        'Core\Get-DotNetToolsAssemblyInfo.ps1'
+        'Core\Get-DotNetToolsFileInfo.ps1'
+        'Core\New-DotNetToolsMarkdownTable.ps1'
+        'Core\ConvertTo-DotNetToolsMarkdownReport.ps1'
+        'Core\Write-DotNetToolsAssemblyReport.ps1'
     )
 
     foreach ($relativePath in $moduleFiles) {
@@ -130,6 +139,7 @@ try {
     Write-Output "Runtime folders : $($runtimeFolderNames -join ', ')"
     Write-Output "Remove from runtimes : $($runtimeSubfoldersToRemove -join ', ')"
     Write-Output "Dockerfiles tools : $dockerfilesToolDirectory"
+    Write-Output "Assembly report : $assemblyReportPath"
     Write-Output ""
     Write-Output "---------------------------- END: Settings ----------------------------"
     Write-Output ""
@@ -212,9 +222,17 @@ try {
     Write-Host "Done copying tools into dockerfiles: $publishedCount files" -ForegroundColor Green
     Write-Output ""
 
+    Write-Host "Writing assembly report:" -ForegroundColor Green
+    $report = Write-DotNetToolsAssemblyReport `
+        -ToolsDirectory $dockerfilesToolDirectory `
+        -OutputPath $assemblyReportPath
+    Write-Host "Done writing assembly report: $($report.ManagedCount) managed assemblies, $($report.OtherCount) other files, $($report.UnreadableCount) unreadable." -ForegroundColor Green
+    Write-Output ""
+
     Write-Host "Packages are in $buildDirectory" -ForegroundColor Cyan
     Write-Host "Runtime files are in $toolDirectory" -ForegroundColor Cyan
     Write-Host "Dockerfiles tools are in $dockerfilesToolDirectory" -ForegroundColor Cyan
+    Write-Host "Assembly report is in $($report.ReportPath)" -ForegroundColor Cyan
 }
 catch {
 

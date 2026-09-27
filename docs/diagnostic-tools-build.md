@@ -74,6 +74,9 @@ Installed side by side, those trees add up. On disk the `dotnet-debug`, `dotnet-
 6. Copy `runtimes`, `linux-x64`, and `linux-musl-x64` when the package has them.
 7. Delete `win*` and `browser` under `dotnet-tools/runtimes`.
 8. Publish the merged tree to `dockerfiles/.dotnet-tools`.
+9. Write `dockerfiles/.dotnet-tools/dotnet-assembly-report.md`: `AssemblyVersion`, `AssemblyFileVersion`, `AssemblyInformationalVersion`, target framework, public key token, Authenticode signer, and SHA-256 for every file in the folder.
+
+To regenerate only the report, run `pwsh ./.ps/Diagnostics-Tools-Build/DotNet-Tools-Report.ps1`.
 
 `dockerfiles/.dotnet-tools` is the folder an image build copies instead of the four `dotnet tool install` trees. The Alpine build context is `dockerfiles/alpine/10`, so the folder is passed as an additional context. One directory holds every tool assembly, and the image sets a single path:
 
