@@ -91,7 +91,7 @@ Param (
     [string]$DotNetVersion = '10',
 
     [Parameter(Mandatory = $false)]
-    [bool]$NoCache = $true,
+    [bool]$NoCache = $false,
 
     [Parameter(Mandatory = $false)]
     [switch]$ToolsOnly,
