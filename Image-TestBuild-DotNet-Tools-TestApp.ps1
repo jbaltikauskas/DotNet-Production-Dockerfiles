@@ -28,7 +28,7 @@
              - copies artifacts to tests\.build
              - builds the three test-app images
              - starts each container detached
-       10. Invoke .ps\Core\Write-DotNetArtifactReport.ps1 to scan
+       10. Invoke .ps\Core\Export-DotNetArtifactReport.ps1 to scan
            dockerfiles\.dotnet-tools and write the assembly report straight to
            tests\.build\dotnet-assembly-report.md.
 
@@ -154,7 +154,7 @@ try {
 
     $toolsScriptRelativePath = '.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1'
     $testAppScriptRelativePath = '.ps\TestApp\Build-DotNet-Tools-TestApp.ps1'
-    $reportScriptRelativePath = '.ps\Core\Write-DotNetArtifactReport.ps1'
+    $reportScriptRelativePath = '.ps\Core\Export-DotNetArtifactReport.ps1'
     $dotnetToolsDirectory = Join-Path $repositoryRoot 'dockerfiles\.dotnet-tools'
 
     $buildDirectory = Join-Path $testsRoot '.build'
