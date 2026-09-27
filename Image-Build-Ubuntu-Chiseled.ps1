@@ -9,14 +9,19 @@
 
         1. Resolve the repository root next to this script.
         2. Load helper functions from .ps\ImageBuild\Core.
-        3. Verify that the docker CLI is available.
-        4. Build Ubuntu Chiseled images tagged :latest. Both images run unless
+        3. When dockerfiles\.dotnet-tools is missing or empty, invoke
+           .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1 before the tools
+           image. That script writes dockerfiles\.build and
+           dockerfiles\.dotnet-tools. -WaitOnExit is not forwarded.
+           An existing folder is reused.
+        4. Verify that the docker CLI is available.
+        5. Build Ubuntu Chiseled images tagged :latest. Both images run unless
            -ToolsOnly is set, in which case only the diagnostics-tools
            image (target: final) is built:
              a. final with --build-context dotnet-tools=dockerfiles/.dotnet-tools
              b. runtime-base without the dotnet-tools build context
-        5. Compose docker buildx build arguments per image.
-        6. Invoke docker from the repository root and stream the output.
+        6. Compose docker buildx build arguments per image.
+        7. Invoke docker from the repository root and stream the output.
 
     Images produced for -DotNetVersion 10 (the default):
 
@@ -54,13 +59,16 @@
     Host messages and docker CLI output. Exit code 0 on success.
 
 .NOTES
-    Requires PowerShell 7.2+ and a working Docker installation with buildx.
-    The tools image requires the dockerfiles/.dotnet-tools folder produced by
-    .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1. The lean runtime-base image does not.
+    Requires PowerShell 7.2+, a working Docker installation with buildx, and
+    network access to NuGet when dockerfiles/.dotnet-tools is missing. This
+    script then runs .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1, which
+    writes dockerfiles\.build and dockerfiles\.dotnet-tools. An existing
+    tools folder is reused. The lean runtime-base image does not need it.
 
 .EXAMPLE
     PS> .\Image-Build-Ubuntu-Chiseled.ps1
-    Builds contoso/ubuntu-chiseled-net-dotnet-tools-10:latest and
+    Publishes dockerfiles\.dotnet-tools when that folder is missing, then
+    builds contoso/ubuntu-chiseled-net-dotnet-tools-10:latest and
     contoso/ubuntu-chiseled-net-10:latest.
 
 .EXAMPLE
@@ -164,6 +172,43 @@ try {
             BuildArgs    = @{}
             IncludeTools = $false
         })
+    }
+
+    $buildsToolsImage = $false
+    foreach ($imageBuild in $imageBuilds) {
+        if ($imageBuild.IncludeTools) {
+            $buildsToolsImage = $true
+            break
+        }
+    }
+
+    if ($buildsToolsImage) {
+        $toolsContextFull = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $dotnetToolsContext))
+        $toolsContextReady = $false
+        if (Test-Path -LiteralPath $toolsContextFull -PathType Container) {
+            $toolsContextReady = @(Get-ChildItem -LiteralPath $toolsContextFull -Force).Count -gt 0
+        }
+
+        if ($toolsContextReady) {
+            Write-Host "Using existing ${dotnetToolsContext}." -ForegroundColor Green
+        }
+        else {
+            $toolsScriptRelativePath = '.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1'
+            $toolsScriptPath = Join-Path $repositoryRoot $toolsScriptRelativePath
+            if (-not (Test-Path -LiteralPath $toolsScriptPath -PathType Leaf)) {
+                throw "Required diagnostics-tools script was not found: '$toolsScriptPath'."
+            }
+
+            Write-Host ""
+            Write-Host "=============================================================" -ForegroundColor Cyan
+            Write-Host "  Invoking $toolsScriptRelativePath" -ForegroundColor Cyan
+            Write-Host "=============================================================" -ForegroundColor Cyan
+
+            & $toolsScriptPath
+            if ($LASTEXITCODE) {
+                throw "$toolsScriptRelativePath failed with exit code $LASTEXITCODE."
+            }
+        }
     }
 
     Write-ImageBuildSettings `

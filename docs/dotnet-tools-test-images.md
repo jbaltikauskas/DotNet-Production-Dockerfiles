@@ -112,7 +112,7 @@ docker run --rm contoso/alpine-net-dotnet-tools-testapp-10:latest --iterations 5
 
 Before the image builds, the orchestrator runs [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](../.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1). That script downloads `dotnet-counters`, `dotnet-debug`, `dotnet-gcdump`, and `dotnet-trace` into `dockerfiles/.build` and publishes the merged Linux x64 tree to `dockerfiles/.dotnet-tools`.
 
-The three per-distro scripts live at the repository root. With `-ToolsOnly` each one builds the Dockerfile stage named `final`. That stage copies `dockerfiles/.dotnet-tools` into the image and puts it on `PATH` under `/app/dotnet-tools`.
+The three per-distro scripts live at the repository root. With `-ToolsOnly` each one builds the Dockerfile stage named `final`. That stage copies `dockerfiles/.dotnet-tools` into the image and puts it on `PATH` under `/app/dotnet-tools`. Run on its own, a per-distro script publishes that folder when it is missing or empty.
 
 | Order | Script | Image |
 | --- | --- | --- |

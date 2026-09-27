@@ -21,7 +21,9 @@
        13. Copy dockerfiles\.build\dotnet-tools into dockerfiles\.dotnet-tools.
 
     Image-Build-All.ps1 and Image-TestBuild-DotNet-Tools-TestApp.ps1 invoke
-    this script before any image build. They do not pass -WaitOnExit.
+    this script before any image build. Each per-distro script invokes it
+    when dockerfiles\.dotnet-tools is missing or empty. None of them pass
+    -WaitOnExit.
 
 .PARAMETER WaitOnExit
     When set, waits for Enter after success or failure so a double-clicked

@@ -418,3 +418,4 @@ FodyWeavers.xsd
 *.msp
 /tests/DotNet-Tools-TestApp/.dotnetbuild.logs
 bin
+/dockerfiles/.dotnet-tools

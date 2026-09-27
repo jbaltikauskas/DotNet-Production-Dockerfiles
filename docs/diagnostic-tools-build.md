@@ -135,7 +135,7 @@ pwsh ./.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1 -WaitOnExit
 
 `-WaitOnExit` waits for Enter after success or failure so a double-clicked window stays open. Omit it in a terminal or CI run.
 
-[`Image-Build-All.ps1`](../Image-Build-All.ps1) and [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](../Image-TestBuild-DotNet-Tools-TestApp.ps1) invoke this script before any image build. They do not pass `-WaitOnExit`. A per-distro script run on its own still expects `dockerfiles/.dotnet-tools` to already exist.
+[`Image-Build-All.ps1`](../Image-Build-All.ps1) and [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](../Image-TestBuild-DotNet-Tools-TestApp.ps1) invoke this script before any image build. They do not pass `-WaitOnExit`. [`Image-Build-Alpine.ps1`](../Image-Build-Alpine.ps1), [`Image-Build-Ubuntu.ps1`](../Image-Build-Ubuntu.ps1), and [`Image-Build-Ubuntu-Chiseled.ps1`](../Image-Build-Ubuntu-Chiseled.ps1) invoke it when `dockerfiles/.dotnet-tools` is missing or empty, and reuse the folder when it already has files.
 
 The script writes:
 

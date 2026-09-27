@@ -293,7 +293,7 @@ This repository builds **three** .NET 10 wrapper images on top of the Microsoft 
 
 ### Diagnostic CLIs
 
-Every Dockerfile builds one image, target `final`, tagged `:latest`. That stage copies `dockerfiles/.dotnet-tools` (`dotnet-debug`, `dotnet-gcdump`, and `dotnet-trace`) onto `/app/dotnet-tools` and prepends that directory to `PATH`. A terminal `docker build` needs that folder first: run [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1), which also writes the downloaded packages under `dockerfiles/.build`. [`Image-Build-All.ps1`](Image-Build-All.ps1) and [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1) run that script themselves. [`alpine/10`](dockerfiles/alpine/10/Dockerfile) publishes `contoso/alpine-net-dotnet-tools-10:latest`, [`ubuntu/10`](dockerfiles/ubuntu/10/Dockerfile) publishes `contoso/ubuntu-net-dotnet-tools-10:latest`, and [`ubuntu-chiseled/10`](dockerfiles/ubuntu-chiseled/10/Dockerfile) publishes `contoso/ubuntu-chiseled-net-dotnet-tools-10:latest`.
+Every Dockerfile builds one image, target `final`, tagged `:latest`. That stage copies `dockerfiles/.dotnet-tools` (`dotnet-debug`, `dotnet-gcdump`, and `dotnet-trace`) onto `/app/dotnet-tools` and prepends that directory to `PATH`. A terminal `docker build` needs that folder first: run [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1), which also writes the downloaded packages under `dockerfiles/.build`. [`Image-Build-All.ps1`](Image-Build-All.ps1), [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1), and each per-distro script run that script themselves when the folder is missing. [`alpine/10`](dockerfiles/alpine/10/Dockerfile) publishes `contoso/alpine-net-dotnet-tools-10:latest`, [`ubuntu/10`](dockerfiles/ubuntu/10/Dockerfile) publishes `contoso/ubuntu-net-dotnet-tools-10:latest`, and [`ubuntu-chiseled/10`](dockerfiles/ubuntu-chiseled/10/Dockerfile) publishes `contoso/ubuntu-chiseled-net-dotnet-tools-10:latest`.
 
 
 | Input            | Default | Effect                                                                                                            |
@@ -492,7 +492,7 @@ From the repository root in `pwsh`, the scripts apply the same `docker buildx` f
 # Publishes dockerfiles/.build and dockerfiles/.dotnet-tools, then all three base images
 .\Image-Build-All.ps1
 
-# One distro. Expects dockerfiles/.dotnet-tools to already exist.
+# One distro. Publishes dockerfiles/.dotnet-tools when that folder is missing.
 .\Image-Build-Alpine.ps1
 .\Image-Build-Ubuntu.ps1
 .\Image-Build-Ubuntu-Chiseled.ps1
@@ -549,7 +549,7 @@ Published images are signed with [cosign](https://github.com/sigstore/cosign) vi
 
 ## Diagnostic tools build
 
-Every image needs `dotnet-debug`, `dotnet-gcdump`, and `dotnet-trace` on `PATH` under `/app/dotnet-tools`. Installing those CLIs with `dotnet tool install` inside the Dockerfile copies three full NuGet trees and adds about **136 MB** to the image. This repository instead runs [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) first: it downloads the packages into `dockerfiles/.build`, merges them into one Linux x64 folder at `dockerfiles/.dotnet-tools` (~28–30 MB), and the image copies that. [`Image-Build-All.ps1`](Image-Build-All.ps1) and [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1) run that script before any image build.
+Every image needs `dotnet-debug`, `dotnet-gcdump`, and `dotnet-trace` on `PATH` under `/app/dotnet-tools`. Installing those CLIs with `dotnet tool install` inside the Dockerfile copies three full NuGet trees and adds about **136 MB** to the image. This repository instead runs [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) first: it downloads the packages into `dockerfiles/.build`, merges them into one Linux x64 folder at `dockerfiles/.dotnet-tools` (~28–30 MB), and the image copies that. [`Image-Build-All.ps1`](Image-Build-All.ps1) and [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1) run that script before any image build. Each per-distro script runs it when `dockerfiles/.dotnet-tools` is missing or empty.
 
 **Why.** Each `dotnet tool install` tree keeps its own copy of shared framework assemblies, plus culture satellites, PDBs, XML docs, and Windows / macOS / ARM runtimes a Linux container never loads. The merge script drops that duplication so the `:latest` images stay useful for dumps and traces without the 136 MB layer.
 
@@ -600,7 +600,7 @@ The repository ships PowerShell 7.2+ scripts that wrap `docker buildx build` wit
 | [`Image-Build-Ubuntu-Chiseled.ps1`](Image-Build-Ubuntu-Chiseled.ps1)            | Ubuntu Chiseled only (last-resort)         | `contoso/ubuntu-chiseled-net-dotnet-tools-10:latest` |
 | [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1) | Publishes diagnostic NuGet tools, then the three tools images, the test-app images, and detached containers | `dockerfiles/.build`, `dockerfiles/.dotnet-tools`, `contoso/*-net-dotnet-tools-10:latest`, and `contoso/*-net-dotnet-tools-testapp-10:latest` |
 
-`Image-Build-All.ps1` first runs [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1), which downloads the diagnostic NuGet packages into `dockerfiles/.build` and publishes the merged Linux tree to `dockerfiles/.dotnet-tools`. It then invokes `Image-Build-Alpine.ps1`, `Image-Build-Ubuntu.ps1`, and `Image-Build-Ubuntu-Chiseled.ps1` in that order, forwarding `-NoCache`. It builds no images itself and stops immediately if the tools script or any per-distro script fails. Use a per-distro script directly when you need to build a single distro; that script still expects `dockerfiles/.dotnet-tools` to already exist.
+`Image-Build-All.ps1` first runs [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1), which downloads the diagnostic NuGet packages into `dockerfiles/.build` and publishes the merged Linux tree to `dockerfiles/.dotnet-tools`. It then invokes `Image-Build-Alpine.ps1`, `Image-Build-Ubuntu.ps1`, and `Image-Build-Ubuntu-Chiseled.ps1` in that order, forwarding `-NoCache`. It builds no images itself and stops immediately if the tools script or any per-distro script fails. Use a per-distro script directly when you need to build a single distro. That script publishes `dockerfiles/.dotnet-tools` when the folder is missing or empty, and reuses it when it already exists.
 
 Reusable helper functions live under [`.ps/ImageBuild/Core/`](.ps/ImageBuild/Core/) (one function per file). The three per-distro entry scripts dot-source the build helpers and the exit helpers (`Write-ImageBuildError`, `Write-ImageBuildSuccess`). `Image-Build-All.ps1` does not touch these — the per-distro scripts it calls load them:
 
@@ -618,7 +618,7 @@ See [Prerequisites](#prerequisites).
 
 - PowerShell 7.2 or later (`pwsh`), installed with `dotnet tool install --global PowerShell`.
 - [Docker Desktop for Windows](https://docs.docker.com/desktop/setup/install/windows-install/) with BuildKit (`docker buildx` on PATH).
-- [`Image-Build-All.ps1`](Image-Build-All.ps1) and [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1) run [`.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) first. That script writes `dockerfiles/.build` and `dockerfiles/.dotnet-tools`. A per-distro script run on its own, or a terminal `docker build`, still needs that tools folder to exist. See [Diagnostic tools build](#diagnostic-tools-build). Every image build copies it.
+- [`Image-Build-All.ps1`](Image-Build-All.ps1) and [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1) run [`.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) first. That script writes `dockerfiles/.build` and `dockerfiles/.dotnet-tools`. Each per-distro script does the same when that tools folder is missing or empty, and reuses it when it already exists. A terminal `docker build` still needs the folder. See [Diagnostic tools build](#diagnostic-tools-build). Every image build copies it.
 
 ### Parameters
 
@@ -631,7 +631,7 @@ See [Prerequisites](#prerequisites).
 
 #### All three images — [`Image-Build-All.ps1`](Image-Build-All.ps1)
 
-Runs [`.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) first, writing `dockerfiles/.build` and `dockerfiles/.dotnet-tools`, then the three per-distro scripts below in order (Alpine, Ubuntu Noble, Ubuntu Chiseled). Stops immediately if the tools script or any image script fails. To narrow the scope, invoke a per-distro script directly; that script expects `dockerfiles/.dotnet-tools` to already exist.
+Runs [`.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) first, writing `dockerfiles/.build` and `dockerfiles/.dotnet-tools`, then the three per-distro scripts below in order (Alpine, Ubuntu Noble, Ubuntu Chiseled). Stops immediately if the tools script or any image script fails. To narrow the scope, invoke a per-distro script directly. That script publishes `dockerfiles/.dotnet-tools` when the folder is missing or empty, and reuses it when it already exists.
 
 ```powershell
 .\Image-Build-All.ps1
@@ -677,7 +677,7 @@ Publishes `dockerfiles/.build` and `dockerfiles/.dotnet-tools`, builds the three
 # 2. Iterating on the Alpine Dockerfile only, reusing BuildKit cache and the tools folder from step 1.
 .\Image-Build-Alpine.ps1 -NoCache:$false
 
-# 3. Rebuilding one distro. Each script tags its image :latest and expects dockerfiles/.dotnet-tools to already exist.
+# 3. Rebuilding one distro. The script publishes dockerfiles/.dotnet-tools when that folder is missing.
 .\Image-Build-Ubuntu.ps1
 ```
 
