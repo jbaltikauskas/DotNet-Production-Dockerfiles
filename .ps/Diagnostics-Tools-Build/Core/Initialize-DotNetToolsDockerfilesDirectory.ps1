@@ -12,7 +12,7 @@ function Initialize-DotNetToolsDockerfilesDirectory () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The dockerfiles\.dotnet-tools folder to create, or clear when it already exists.')]
         [ValidateNotNullOrEmpty()]
         [string]$DestinationDirectory
     )

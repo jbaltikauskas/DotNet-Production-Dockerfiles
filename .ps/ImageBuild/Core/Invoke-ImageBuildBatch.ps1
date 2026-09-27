@@ -14,19 +14,19 @@ function Invoke-ImageBuildBatch () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Absolute path the docker builds run from.')]
         [ValidateNotNullOrEmpty()]
         [string]$RepositoryRoot,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The image-build definitions to run, one docker build per entry.')]
         [ValidateNotNull()]
         [object[]]$ImageBuilds,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Repository-relative dotnet-tools folder added as a build context when an entry sets IncludeTools.')]
         [ValidateNotNullOrEmpty()]
         [string]$DotNetToolsContext,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Pass --no-cache to docker buildx build for every entry.')]
         [bool]$NoCache
     )
 

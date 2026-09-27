@@ -17,7 +17,7 @@ function Get-DotNetToolsAssemblyInfo () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Absolute path to the file to inspect.')]
         [ValidateNotNullOrEmpty()]
         [string]$Path
     )
@@ -103,10 +103,10 @@ function Resolve-DotNetToolsPlatform () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The PE COFF header machine type of the image.')]
         [System.Reflection.PortableExecutable.Machine]$Machine,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The CLR header CorFlags of the image.')]
         [System.Reflection.PortableExecutable.CorFlags]$CorFlags
     )
 
@@ -152,7 +152,7 @@ function Test-DotNetToolsPortableExecutable () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Absolute path to the file to inspect.')]
         [ValidateNotNullOrEmpty()]
         [string]$Path
     )
@@ -198,7 +198,7 @@ function Get-DotNetToolsAssemblyAttributes () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The metadata reader opened on the assembly.')]
         [System.Reflection.Metadata.MetadataReader]$Reader
     )
 
@@ -269,10 +269,10 @@ function Get-DotNetToolsAttributeTypeName () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The metadata reader opened on the assembly.')]
         [System.Reflection.Metadata.MetadataReader]$Reader,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The custom attribute whose declaring type name is resolved.')]
         [System.Reflection.Metadata.CustomAttribute]$Attribute
     )
 
@@ -320,7 +320,7 @@ function ConvertTo-DotNetToolsTfm () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, HelpMessage = 'A TargetFrameworkAttribute value such as ".NETCoreApp,Version=v8.0".')]
         [string]$FrameworkName
     )
 

@@ -13,7 +13,7 @@ function Get-DotNetToolsNuGetVersion () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The dotnet diagnostic tool package id to resolve, for example dotnet-trace.')]
         [ValidateNotNullOrEmpty()]
         [string]$PackageId
     )

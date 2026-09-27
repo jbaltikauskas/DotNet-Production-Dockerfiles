@@ -19,33 +19,33 @@ function Invoke-DockerImageBuild () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Absolute path the docker build runs from.')]
         [ValidateNotNullOrEmpty()]
         [string]$RepositoryRoot,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Repository-relative path to the Dockerfile.')]
         [ValidateNotNullOrEmpty()]
         [string]$Dockerfile,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Repository-relative docker build context folder.')]
         [ValidateNotNullOrEmpty()]
         [string]$BuildContext,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Dockerfile stage to build (aspnet-base, runtime-base, or final).')]
         [ValidateSet('aspnet-base', 'runtime-base', 'final')]
         [string]$BuildTarget,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Image tag to apply, for example contoso/alpine-net-10:latest.')]
         [ValidateNotNullOrEmpty()]
         [string]$Tag,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, HelpMessage = 'Repository-relative dotnet-tools folder passed as an additional build context. Omit for images that do not need it.')]
         [string]$DotNetToolsContext,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, HelpMessage = 'Docker build args as name/value pairs. Defaults to none.')]
         [hashtable]$BuildArgs = @{},
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, HelpMessage = 'Pass --no-cache to docker buildx build. Defaults to $true.')]
         [bool]$NoCache = $true
     )
 

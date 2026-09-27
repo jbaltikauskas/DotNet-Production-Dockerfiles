@@ -11,22 +11,22 @@ function Write-ImageBuildSettings () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Repository root shown in the settings block.')]
         [ValidateNotNullOrEmpty()]
         [string]$RepositoryRoot,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Distro label shown in the settings block.')]
         [ValidateNotNullOrEmpty()]
         [string]$Distro,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Whether --no-cache is passed to docker buildx build.')]
         [bool]$NoCache,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Repository-relative dotnet-tools build context shown in the settings block.')]
         [ValidateNotNullOrEmpty()]
         [string]$DotNetToolsContext,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The image-build definitions listed in the settings block.')]
         [ValidateNotNull()]
         [object[]]$ImageBuilds
     )

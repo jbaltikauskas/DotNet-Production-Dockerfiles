@@ -17,11 +17,11 @@ function Get-DotNetToolsFileInfo () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Absolute path to the file to collect report data for.')]
         [ValidateNotNullOrEmpty()]
         [string]$Path,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Scan root the reported relative path is computed against.')]
         [ValidateNotNullOrEmpty()]
         [string]$RootDirectory
     )
@@ -94,11 +94,11 @@ function Resolve-DotNetToolsFileKind () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'File name (with extension) used to classify the file.')]
         [ValidateNotNullOrEmpty()]
         [string]$Name,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, HelpMessage = 'Assembly info from Get-DotNetToolsAssemblyInfo; when IsManaged the file is a managed assembly.')]
         [object]$Assembly
     )
 
@@ -145,7 +145,7 @@ function Get-DotNetToolsSigner () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Absolute path to the binary whose Authenticode signer is read.')]
         [ValidateNotNullOrEmpty()]
         [string]$Path
     )

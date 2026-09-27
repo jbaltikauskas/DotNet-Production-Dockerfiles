@@ -12,11 +12,11 @@ function Copy-DotNetToolsDirectoryTree () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Source directory whose file tree is copied.')]
         [ValidateNotNullOrEmpty()]
         [string]$SourceDirectory,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Destination directory the file tree is copied into.')]
         [ValidateNotNullOrEmpty()]
         [string]$DestinationDirectory
     )

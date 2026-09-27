@@ -10,7 +10,7 @@ function Write-ImageBuildSummary () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The image-build definitions to summarize.')]
         [ValidateNotNull()]
         [object[]]$ImageBuilds
     )

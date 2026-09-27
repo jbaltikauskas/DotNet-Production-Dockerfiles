@@ -391,7 +391,7 @@ function Get-TestAppImageBuilds {
 
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The .NET major version used in the test-app image tags.')]
         [ValidateNotNullOrEmpty()]
         [string]$DotNetVersion
     )
@@ -430,19 +430,19 @@ function Build-TestAppDockerImages {
 
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Absolute path the docker builds run from.')]
         [ValidateNotNullOrEmpty()]
         [string]$RepositoryRoot,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The test-app image-build definitions to build.')]
         [ValidateNotNull()]
         [object[]]$ImageBuilds,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The .NET major version used in the test-app image tags.')]
         [ValidateNotNullOrEmpty()]
         [string]$DotNetVersion,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Pass --no-cache to docker buildx build for every test-app image.')]
         [bool]$NoCache
     )
 
@@ -530,7 +530,7 @@ function Start-TestAppContainersDetached {
 
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The test-app image-build definitions whose containers are started detached.')]
         [ValidateNotNull()]
         [object[]]$ImageBuilds
     )

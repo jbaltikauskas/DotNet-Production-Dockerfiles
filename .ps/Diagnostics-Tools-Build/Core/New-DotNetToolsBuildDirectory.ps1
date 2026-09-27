@@ -11,7 +11,7 @@ function New-DotNetToolsBuildDirectory () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Repository root under which dockerfiles\.build is created.')]
         [ValidateNotNullOrEmpty()]
         [string]$RepositoryRoot
     )

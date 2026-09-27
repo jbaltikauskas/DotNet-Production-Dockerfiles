@@ -14,7 +14,7 @@ function Write-ImageBuildSuccess () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, HelpMessage = 'Wait for Enter after the success banner so a double-clicked console window stays open.')]
         [switch]$WaitOnExit
     )
 

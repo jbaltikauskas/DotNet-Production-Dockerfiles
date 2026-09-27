@@ -14,11 +14,11 @@ function Remove-DotNetToolsRuntimeSubfolders () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Path to the merged dotnet-tools folder whose runtimes subfolders are pruned.')]
         [ValidateNotNullOrEmpty()]
         [string]$ToolDirectory,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Wildcard patterns of runtime subfolders to remove, for example win* and browser.')]
         [ValidateNotNullOrEmpty()]
         [string[]]$SubfolderPatterns
     )

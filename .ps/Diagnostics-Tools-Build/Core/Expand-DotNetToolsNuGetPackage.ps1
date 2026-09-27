@@ -12,15 +12,15 @@ function Expand-DotNetToolsNuGetPackage () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The dotnet diagnostic tool package id, for example dotnet-trace.')]
         [ValidateNotNullOrEmpty()]
         [string]$PackageId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Path to the downloaded .nupkg file to extract.')]
         [ValidateNotNullOrEmpty()]
         [string]$NupkgPath,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Path to the dockerfiles\.build working folder the package is extracted under.')]
         [ValidateNotNullOrEmpty()]
         [string]$BuildDirectory
     )

@@ -14,15 +14,15 @@ function Copy-DotNetToolsRuntimeFiles () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The dotnet diagnostic tool package id, for example dotnet-trace.')]
         [ValidateNotNullOrEmpty()]
         [string]$PackageId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Path to the dockerfiles\.build working folder.')]
         [ValidateNotNullOrEmpty()]
         [string]$BuildDirectory,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Path to the merged dotnet-tools output folder that files are copied into.')]
         [ValidateNotNullOrEmpty()]
         [string]$ToolDirectory
     )

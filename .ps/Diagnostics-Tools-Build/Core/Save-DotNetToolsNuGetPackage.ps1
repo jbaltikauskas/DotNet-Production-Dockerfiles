@@ -12,15 +12,15 @@ function Save-DotNetToolsNuGetPackage () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The dotnet diagnostic tool package id to download, for example dotnet-trace.')]
         [ValidateNotNullOrEmpty()]
         [string]$PackageId,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The NuGet package version to download.')]
         [ValidateNotNullOrEmpty()]
         [string]$Version,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Path to the dockerfiles\.build folder the .nupkg is saved into.')]
         [ValidateNotNullOrEmpty()]
         [string]$BuildDirectory
     )

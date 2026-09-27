@@ -55,7 +55,7 @@
 
 [CmdletBinding()]
 Param (
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $false, HelpMessage = 'Wait for Enter after success or failure so a double-clicked console window stays open. Omit it in a terminal or CI run.')]
     [switch]$WaitOnExit
 )
 

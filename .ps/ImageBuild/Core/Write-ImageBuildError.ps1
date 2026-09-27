@@ -18,11 +18,11 @@ function Write-ImageBuildError () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The caught error record to report.')]
         [ValidateNotNull()]
         [System.Management.Automation.ErrorRecord]$ErrorRecord,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, HelpMessage = 'Wait for Enter after printing the error so a double-clicked console window stays open.')]
         [switch]$WaitOnExit
     )
 

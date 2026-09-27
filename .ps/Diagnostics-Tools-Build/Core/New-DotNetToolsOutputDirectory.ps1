@@ -11,7 +11,7 @@ function New-DotNetToolsOutputDirectory () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Build folder under which the dotnet-tools output folder is created.')]
         [ValidateNotNullOrEmpty()]
         [string]$BuildDirectory
     )

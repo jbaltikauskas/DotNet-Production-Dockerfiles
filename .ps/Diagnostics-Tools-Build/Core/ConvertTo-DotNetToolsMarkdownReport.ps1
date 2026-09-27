@@ -13,15 +13,15 @@ function ConvertTo-DotNetToolsMarkdownReport () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Collected file-info objects from Get-DotNetToolsFileInfo.')]
         [AllowEmptyCollection()]
         [object[]]$Files,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Records of files that could not be read, each with RelativePath and Message.')]
         [AllowEmptyCollection()]
         [object[]]$Failures,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Absolute path of the scanned folder, shown in the report header.')]
         [ValidateNotNullOrEmpty()]
         [string]$ToolsDirectory
     )
@@ -64,15 +64,15 @@ function Get-DotNetToolsReportHeaderSection () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Collected file-info objects from Get-DotNetToolsFileInfo.')]
         [AllowEmptyCollection()]
         [object[]]$Files,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Records of files that could not be read, each with RelativePath and Message.')]
         [AllowEmptyCollection()]
         [object[]]$Failures,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Absolute path of the scanned folder, shown in the report header.')]
         [ValidateNotNullOrEmpty()]
         [string]$ToolsDirectory
     )
@@ -166,7 +166,7 @@ function Get-DotNetToolsReportToolSection () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Collected file-info objects from Get-DotNetToolsFileInfo.')]
         [AllowEmptyCollection()]
         [object[]]$Files
     )
@@ -221,7 +221,7 @@ function Get-DotNetToolsReportAssemblySection () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Managed-assembly file-info objects, sorted by relative path.')]
         [AllowEmptyCollection()]
         [object[]]$ManagedFiles
     )
@@ -273,7 +273,7 @@ function Get-DotNetToolsReportDetailSection () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Managed-assembly file-info objects, sorted by relative path.')]
         [AllowEmptyCollection()]
         [object[]]$ManagedFiles
     )
@@ -353,7 +353,7 @@ function Get-DotNetToolsReportOtherFileSection () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Non-managed file-info objects (native libraries, JSON manifests, and other files).')]
         [AllowEmptyCollection()]
         [object[]]$OtherFiles
     )
@@ -408,11 +408,11 @@ function Get-DotNetToolsReportWarningSection () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Managed-assembly file-info objects, sorted by relative path.')]
         [AllowEmptyCollection()]
         [object[]]$ManagedFiles,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Records of files that could not be read, each with RelativePath and Message.')]
         [AllowEmptyCollection()]
         [object[]]$Failures
     )
