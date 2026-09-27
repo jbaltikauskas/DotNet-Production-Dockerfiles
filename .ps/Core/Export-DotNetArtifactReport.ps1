@@ -17,7 +17,7 @@
         6. For each *.dll, read .NET assembly metadata without loading it:
            AssemblyVersion, AssemblyFileVersion, AssemblyInformationalVersion,
            title, company, product, copyright, configuration, target framework,
-           public key token, platform, MVID, and AssemblyMetadata pairs.
+           public key token, referenced assembly names, and AssemblyMetadata pairs.
         7. For each *.runtimeconfig.json and *.deps.json, read the TFM,
            shared framework, roll-forward policy, and runtime target.
         8. Record files that cannot be read as warnings instead of failing.

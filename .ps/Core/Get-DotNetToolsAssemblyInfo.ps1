@@ -5,13 +5,14 @@ function Get-DotNetToolsAssemblyInfo () {
     .DESCRIPTION
         Opens the file with System.Reflection.Metadata. The assembly is not
         loaded, so the file is not locked and any target framework works.
-        Returns an object with IsManaged set to $false for files that are not
-        PE images or have no .NET metadata (for example native libraries).
-        Throws when a PE image with metadata cannot be read.
+        Returns an object with IsManaged set to $false when the image has no
+        .NET metadata or is not an assembly (for example native libraries).
+        Throws when the file is not a PE image, or when a PE image with
+        metadata cannot be read.
     .REMARKS
-        1. Return IsManaged = $false when the file does not start with 'MZ'.
-        2. Open a PEReader and return IsManaged = $false when there is no metadata.
-        3. Read the assembly definition, PE headers, and module MVID.
+        1. Open a PEReader and return IsManaged = $false when there is no metadata.
+        2. Return IsManaged = $false when the image is not an assembly.
+        3. Read the assembly definition, the strong-name flag, and referenced assembly names.
         4. Read string attributes with Get-DotNetToolsAssemblyAttributes.
         5. Return the combined object.
     #>
@@ -32,10 +33,6 @@ function Get-DotNetToolsAssemblyInfo () {
 
         $notManaged = [pscustomobject]@{ IsManaged = $false }
 
-        if (-not (Test-DotNetToolsPortableExecutable -Path $Path)) {
-            return $notManaged
-        }
-
         $stream = [System.IO.File]::OpenRead($Path)
         try {
 
@@ -49,11 +46,16 @@ function Get-DotNetToolsAssemblyInfo () {
                 return $notManaged
             }
 
-            $headers = $peReader.PEHeaders
-            $corFlags = $headers.CorHeader.Flags
+            $corFlags = $peReader.PEHeaders.CorHeader.Flags
             $assemblyName = [System.Reflection.AssemblyName]::GetAssemblyName($Path)
             $tokenBytes = $assemblyName.GetPublicKeyToken()
             $attributes = Get-DotNetToolsAssemblyAttributes -Reader $reader
+            $assemblyReferences = [System.Collections.Generic.List[string]]::new()
+
+            foreach ($handle in $reader.AssemblyReferences) {
+                $reference = $reader.GetAssemblyReference($handle)
+                $assemblyReferences.Add($reader.GetString($reference.Name))
+            }
 
             return [pscustomobject]@{
                 IsManaged            = $true
@@ -74,108 +76,14 @@ function Get-DotNetToolsAssemblyInfo () {
                 TargetFramework      = $attributes['TargetFramework']
                 Tfm                  = ConvertTo-DotNetToolsTfm -FrameworkName $attributes['TargetFramework']
                 Metadata             = $attributes['Metadata']
-                Machine              = $headers.CoffHeader.Machine.ToString()
-                Platform             = Resolve-DotNetToolsPlatform -Machine $headers.CoffHeader.Machine -CorFlags $corFlags
-                IsILOnly             = [bool]($corFlags -band [System.Reflection.PortableExecutable.CorFlags]::ILOnly)
-                Requires32Bit        = [bool]($corFlags -band [System.Reflection.PortableExecutable.CorFlags]::Requires32Bit)
                 IsStrongNameSigned   = [bool]($corFlags -band [System.Reflection.PortableExecutable.CorFlags]::StrongNameSigned)
-                Mvid                 = $reader.GetGuid($reader.GetModuleDefinition().Mvid).ToString()
-                ReferenceCount       = $reader.AssemblyReferences.Count
+                AssemblyReferences   = $assemblyReferences.ToArray()
+                ReferenceCount       = $assemblyReferences.Count
             }
         }
         finally {
             $stream.Dispose()
         }
-    }
-}
-
-function Resolve-DotNetToolsPlatform () {
-    <#
-    .SYNOPSIS
-        Returns the build platform label for a managed PE image.
-    .DESCRIPTION
-        Returns 'AnyCPU', 'AnyCPU (32-bit preferred)', 'x86', or the machine
-        name (for example 'Amd64' or 'Arm64') for platform-specific images.
-    .REMARKS
-        1. I386 + ILOnly without Requires32Bit is AnyCPU.
-        2. I386 + ILOnly + Requires32Bit + Prefers32Bit is AnyCPU 32-bit preferred.
-        3. Other I386 images are x86; other machines return their name.
-    #>
-    [CmdletBinding()]
-    Param (
-        [Parameter(Mandatory = $true, HelpMessage = 'The PE COFF header machine type of the image.')]
-        [System.Reflection.PortableExecutable.Machine]$Machine,
-
-        [Parameter(Mandatory = $true, HelpMessage = 'The CLR header CorFlags of the image.')]
-        [System.Reflection.PortableExecutable.CorFlags]$CorFlags
-    )
-
-    Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
-    }
-
-    Process {
-
-        if ($Machine -ne [System.Reflection.PortableExecutable.Machine]::I386) {
-            return $Machine.ToString()
-        }
-
-        $flags = [System.Reflection.PortableExecutable.CorFlags]
-        $isILOnly = [bool]($CorFlags -band $flags::ILOnly)
-        $requires32Bit = [bool]($CorFlags -band $flags::Requires32Bit)
-        $prefers32Bit = [bool]($CorFlags -band $flags::Prefers32Bit)
-
-        if ($isILOnly -and -not $requires32Bit) {
-            return 'AnyCPU'
-        }
-
-        if ($isILOnly -and $prefers32Bit) {
-            return 'AnyCPU (32-bit preferred)'
-        }
-
-        return 'x86'
-    }
-}
-
-function Test-DotNetToolsPortableExecutable () {
-    <#
-    .SYNOPSIS
-        Tests whether a file starts with the 'MZ' PE signature.
-    .DESCRIPTION
-        Returns $true when the first two bytes are 'MZ'; otherwise $false.
-        Never throws for short or empty files.
-    .REMARKS
-        1. Read up to two bytes from the start of the file.
-        2. Return $true when they equal 0x4D 0x5A.
-    #>
-    [CmdletBinding()]
-    Param (
-        [Parameter(Mandatory = $true, HelpMessage = 'Absolute path to the file to inspect.')]
-        [ValidateNotNullOrEmpty()]
-        [string]$Path
-    )
-
-    Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
-    }
-
-    Process {
-
-        $bytes = [byte[]]::new(2)
-        $stream = [System.IO.File]::OpenRead($Path)
-        try {
-
-            $read = $stream.Read($bytes, 0, 2)
-        }
-        finally {
-            $stream.Dispose()
-        }
-
-        return ($read -eq 2 -and $bytes[0] -eq 0x4D -and $bytes[1] -eq 0x5A)
     }
 }
 

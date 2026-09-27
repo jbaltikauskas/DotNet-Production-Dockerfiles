@@ -146,7 +146,7 @@ function Get-DotNetToolsReportReferenceSection () {
             '| `TargetFramework` | Framework the assembly was compiled for, for example `net8.0` or `netstandard2.0`. |'
             '| `AssemblyMetadata` | Free-form key/value pairs, for example `RepositoryUrl`. |'
             ''
-            'Other columns: **Public key token** identifies the strong-name key; **Platform** is the PE target (AnyCPU, x86, Amd64, Arm64); **MVID** is the unique ID of this compiled module; **Signer** is the Authenticode signature status (Windows only).'
+            'Other columns: **Public key token** identifies the strong-name key; **Assembly references** lists each referenced assembly name; **Signer** is the Authenticode signature status (Windows only).'
             ''
         )
     }
@@ -214,7 +214,7 @@ function Get-DotNetToolsReportAssemblySection () {
         Returns the one-row-per-assembly version summary table.
     .DESCRIPTION
         Columns: path, AssemblyVersion, FileVersion, InformationalVersion,
-        TFM, platform, company, size.
+        TFM, company, size.
     .REMARKS
         1. Build one row per managed file.
         2. Emit the table.
@@ -244,7 +244,6 @@ function Get-DotNetToolsReportAssemblySection () {
                     $assembly.FileVersion
                     $assembly.InformationalVersion
                     $assembly.Tfm
-                    $assembly.Platform
                     $assembly.Company
                     (Format-DotNetToolsFileSize -Bytes $file.Length)
                 ))
@@ -252,7 +251,7 @@ function Get-DotNetToolsReportAssemblySection () {
 
         $lines = @('## Managed assemblies', '')
         $lines += New-DotNetToolsMarkdownTable `
-            -Headers @('File', 'AssemblyVersion', 'FileVersion', 'InformationalVersion', 'TFM', 'Platform', 'Company', 'Size') `
+            -Headers @('File', 'AssemblyVersion', 'FileVersion', 'InformationalVersion', 'TFM', 'Company', 'Size') `
             -Rows $rows
         $lines += ''
         return $lines
@@ -269,7 +268,8 @@ function Get-DotNetToolsReportDetailSection () {
     .REMARKS
         1. For each managed file, build the property rows.
         2. Append AssemblyMetadata key/value pairs.
-        3. Wrap the table in <details> with the name and version as summary.
+        3. Append one row per referenced assembly name.
+        4. Wrap the table in <details> with the name and version as summary.
     #>
     [CmdletBinding()]
     Param (
@@ -308,9 +308,7 @@ function Get-DotNetToolsReportDetailSection () {
                 'Culture'                      = $a.Culture
                 'Public key token'             = $a.PublicKeyToken
                 'Strong-name signed'           = $a.IsStrongNameSigned
-                'Platform'                     = "$($a.Platform) (machine $($a.Machine), IL-only $($a.IsILOnly))"
                 'Assembly references'          = $a.ReferenceCount
-                'MVID'                         = $a.Mvid
                 'Win32 file version'           = $file.Win32FileVersion
                 'Win32 product version'        = $file.Win32ProductVersion
                 'Signer'                       = $file.Signer
@@ -325,6 +323,10 @@ function Get-DotNetToolsReportDetailSection () {
 
             foreach ($key in $a.Metadata.Keys) {
                 $rows.Add([string[]]@("Metadata: $key", $a.Metadata[$key]))
+            }
+
+            foreach ($referenceName in $a.AssemblyReferences) {
+                $rows.Add([string[]]@('Assembly reference', $referenceName))
             }
 
             $summary = [System.Net.WebUtility]::HtmlEncode("$($a.AssemblyName) $($a.AssemblyVersion)")
