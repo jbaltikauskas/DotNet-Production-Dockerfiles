@@ -28,7 +28,7 @@
              - copies artifacts to tests\.build
              - builds the three test-app images
              - starts each container detached
-       10. Invoke .ps\Diagnostics-Tools-Build\DotNet-Tools-Report.ps1 to scan
+       10. Invoke .ps\Core\Write-DotNetArtifactReport.ps1 to scan
            dockerfiles\.dotnet-tools and write the assembly report straight to
            tests\.build\dotnet-assembly-report.md.
 
@@ -154,7 +154,8 @@ try {
 
     $toolsScriptRelativePath = '.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1'
     $testAppScriptRelativePath = '.ps\TestApp\Build-DotNet-Tools-TestApp.ps1'
-    $reportScriptRelativePath = '.ps\Diagnostics-Tools-Build\DotNet-Tools-Report.ps1'
+    $reportScriptRelativePath = '.ps\Core\Write-DotNetArtifactReport.ps1'
+    $dotnetToolsDirectory = Join-Path $repositoryRoot 'dockerfiles\.dotnet-tools'
 
     $buildDirectory = Join-Path $testsRoot '.build'
     if (-not (Test-Path -LiteralPath $buildDirectory -PathType Container)) {
@@ -218,8 +219,8 @@ try {
     Invoke-ImageBuildScript `
         -RepositoryRoot $repositoryRoot `
         -RelativePath $reportScriptRelativePath `
-        -Arguments @{ OutputPath = $assemblyReportPath } `
-        -BannerSuffix "-OutputPath $assemblyReportPath"
+        -Arguments @{ ToolsDirectory = $dotnetToolsDirectory; OutputPath = $assemblyReportPath } `
+        -BannerSuffix "-ToolsDirectory $dotnetToolsDirectory -OutputPath $assemblyReportPath"
 }
 catch {
 

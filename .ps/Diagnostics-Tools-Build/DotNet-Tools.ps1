@@ -111,11 +111,11 @@ try {
         'Core\Get-DotNetToolsNuGetVersion.ps1'
         'Core\Save-DotNetToolsNuGetPackage.ps1'
         'Core\Expand-DotNetToolsNuGetPackage.ps1'
-        'Core\Get-DotNetToolsAssemblyInfo.ps1'
-        'Core\Get-DotNetToolsFileInfo.ps1'
-        'Core\New-DotNetToolsMarkdownTable.ps1'
-        'Core\ConvertTo-DotNetToolsMarkdownReport.ps1'
-        'Core\Write-DotNetToolsAssemblyReport.ps1'
+        '..\Core\Get-DotNetToolsAssemblyInfo.ps1'
+        '..\Core\Get-DotNetToolsFileInfo.ps1'
+        '..\Core\New-DotNetToolsMarkdownTable.ps1'
+        '..\Core\ConvertTo-DotNetToolsMarkdownReport.ps1'
+        '..\Core\Write-DotNetToolsAssemblyReport.ps1'
     )
 
     foreach ($relativePath in $moduleFiles) {

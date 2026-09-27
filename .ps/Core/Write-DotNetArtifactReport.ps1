@@ -1,15 +1,16 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Scans dockerfiles\.dotnet-tools and writes a markdown report of every artifact.
+    Scans a folder of .NET build artifacts and writes a markdown report of every file.
 
 .DESCRIPTION
-    Top-down flow when this script runs:
+    Generic report over any folder and its subfolders. Top-down flow when this
+    script runs:
 
-        1. Resolve the tools folder and the report path.
-        2. Load helper functions from Core.
+        1. Resolve the scan folder and the report path.
+        2. Load helper functions that sit beside this script.
         3. Print the settings block.
-        4. Enumerate every file under the tools folder, recursively, skipping
+        4. Enumerate every file under the scan folder, recursively, skipping
            the report file itself.
         5. For each file, collect size, SHA-256, Win32 version resource, and
            Authenticode signer (Windows only).
@@ -22,16 +23,14 @@
         8. Record files that cannot be read as warnings instead of failing.
         9. Build the markdown report and write it as UTF-8 without BOM.
 
-    DotNet-Tools.ps1 writes the same report automatically after it publishes
-    dockerfiles\.dotnet-tools. Run this script to regenerate it on its own.
+    The script is not tied to any particular folder. Callers pass both the
+    folder to scan and the report path.
 
 .PARAMETER ToolsDirectory
-    Folder to scan. Defaults to dockerfiles\.dotnet-tools under the repository root.
+    Folder to scan for .NET build artifacts. Scanned recursively. Mandatory.
 
 .PARAMETER OutputPath
-    Markdown file to write. Defaults to
-    dockerfiles\.dotnet-tools\dotnet-assembly-report.md under the repository
-    root. The parent folder is created when missing.
+    Markdown file to write. The parent folder is created when missing. Mandatory.
 
 .PARAMETER WaitOnExit
     When set, waits for Enter after success or failure so a double-clicked
@@ -45,35 +44,34 @@
     exit code 1 on failure.
 
 .NOTES
-    Requires PowerShell 7.2+. Run DotNet-Tools.ps1 first to populate
-    dockerfiles\.dotnet-tools. Authenticode signer details are only
-    available on Windows.
+    Requires PowerShell 7.2+. Authenticode signer details are only available
+    on Windows.
 
 .EXAMPLE
-    PS> .\.ps\Diagnostics-Tools-Build\DotNet-Tools-Report.ps1
-    Scans dockerfiles\.dotnet-tools and writes dockerfiles\.dotnet-tools\dotnet-assembly-report.md.
+    PS> .\.ps\Core\Write-DotNetArtifactReport.ps1 -ToolsDirectory .\dockerfiles\.dotnet-tools -OutputPath .\dockerfiles\.dotnet-tools\dotnet-assembly-report.md
+    Scans the merged diagnostics-tools folder and writes its assembly report.
 
 .EXAMPLE
-    PS> .\.ps\Diagnostics-Tools-Build\DotNet-Tools-Report.ps1 -ToolsDirectory .\dockerfiles\.build\dotnet-tools -OutputPath .\docs\dotnet-tools-report.md
-    Scans the staging folder and writes the report under docs.
+    PS> .\.ps\Core\Write-DotNetArtifactReport.ps1 -ToolsDirectory .\src\MyApp\bin\Release\net8.0 -OutputPath .\artifacts\myapp-report.md
+    Scans a published output folder and writes the report under artifacts.
 
 .EXAMPLE
-    PS> .\.ps\Diagnostics-Tools-Build\DotNet-Tools-Report.ps1 -WaitOnExit
-    Writes the default report and waits for Enter before the window closes.
+    PS> .\.ps\Core\Write-DotNetArtifactReport.ps1 -ToolsDirectory .\bin -OutputPath .\bin\report.md -WaitOnExit
+    Writes the report and waits for Enter before the window closes.
 #>
 
 #Requires -Version 7.2
 
 [CmdletBinding()]
 Param (
-    [Parameter(Mandatory = $false, Position = 0, HelpMessage = 'Folder to scan for .NET artifacts.')]
+    [Parameter(Mandatory = $true, Position = 0, HelpMessage = 'Folder to scan recursively for .NET build artifacts.')]
     [ValidateNotNullOrEmpty()]
-    [string]$ToolsDirectory = (Join-Path $PSScriptRoot '..\..\dockerfiles\.dotnet-tools'),
+    [string]$ToolsDirectory,
 
-    [Parameter(Mandatory = $false, Position = 1, HelpMessage = 'Markdown report file to write.')]
+    [Parameter(Mandatory = $true, Position = 1, HelpMessage = 'Markdown report file to write.')]
     [ValidateNotNullOrEmpty()]
     [ValidatePattern('\.md$')]
-    [string]$OutputPath = (Join-Path $PSScriptRoot '..\..\dockerfiles\.dotnet-tools\dotnet-assembly-report.md'),
+    [string]$OutputPath,
 
     [Parameter(Mandatory = $false, HelpMessage = 'Wait for Enter before exiting.')]
     [switch]$WaitOnExit
@@ -86,7 +84,7 @@ try {
 
     $toolsDirectoryPath = [System.IO.Path]::GetFullPath($ToolsDirectory)
     $outputFilePath = [System.IO.Path]::GetFullPath($OutputPath)
-    $corePath = Join-Path $PSScriptRoot 'Core'
+    $corePath = $PSScriptRoot
 
     Write-Output "Loading module files:"
 
@@ -109,8 +107,8 @@ try {
     Write-Output ""
     Write-Output "--------------------------- BEGIN: Settings ---------------------------"
     Write-Output ""
-    Write-Output "Tools folder : $toolsDirectoryPath"
-    Write-Output "Report file  : $outputFilePath"
+    Write-Output "Scan folder : $toolsDirectoryPath"
+    Write-Output "Report file : $outputFilePath"
     Write-Output ""
     $PSBoundParameters | Out-String | Write-Output
     Write-Output "---------------------------- END: Settings ----------------------------"
