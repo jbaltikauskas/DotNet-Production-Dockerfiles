@@ -1,16 +1,11 @@
-function Write-ImageBuildError () {
+function Write-ScriptError () {
     <#
     .SYNOPSIS
         Prints the caught exception and the failure banner.
     .DESCRIPTION
-        Shared catch handler for the Image-Build entry scripts. Prints the
-        exception type and message, then the red failure line. Prompts for
-        Enter only when -WaitOnExit is set, so a terminal or CI run exits
-        immediately.
-    .PARAMETER ErrorRecord
-        The ErrorRecord from the caller's catch block.
-    .PARAMETER WaitOnExit
-        When set, waits for Enter so a double-clicked console window stays open.
+        Shared catch handler for entry scripts. Prints the exception type and
+        message, then the red failure line. Prompts for Enter only when
+        -WaitOnExit is set, so a terminal or CI run exits immediately.
     .REMARKS
         1. Print the exception type and message.
         2. Print the failure banner.

@@ -78,6 +78,11 @@ param(
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 
+. (Join-Path $PSScriptRoot '..\Core\Write-ScriptError.ps1')
+. (Join-Path $PSScriptRoot '..\Core\Write-ScriptSuccess.ps1')
+. (Join-Path $PSScriptRoot '..\Core\Assert-LastExitCode.ps1')
+. (Join-Path $PSScriptRoot '..\Core\Assert-Cli.ps1')
+
 <#
     .DESCRIPTION
         Returns the solution file name to build.
@@ -220,9 +225,7 @@ function TaskCompileVSSolution {
             Write-Host "dotnet restore CMD:"
             Write-Host "    dotnet $($restoreArgs -join ' ')" -ForegroundColor "Green"
             & dotnet @restoreArgs
-            if ($LASTEXITCODE -ne 0) {
-                throw "dotnet restore failed with exit code $LASTEXITCODE."
-            }
+            Assert-LastExitCode -Activity 'dotnet restore'
         }
         finally {
             Pop-Location
@@ -240,9 +243,7 @@ function TaskCompileVSSolution {
         Push-Location -Path $workingDirectory
         try {
             & dotnet @buildArgs
-            if ($LASTEXITCODE -ne 0) {
-                throw "dotnet build failed with exit code $LASTEXITCODE. Command: $buildCommandText"
-            }
+            Assert-LastExitCode -Activity "dotnet build ($buildCommandText)"
         }
         finally {
             Pop-Location
@@ -457,9 +458,7 @@ function Build-TestAppDockerImages {
 
     Process {
 
-        if ($null -eq (Get-Command docker -ErrorAction SilentlyContinue)) {
-            throw "Required: Install Docker Engine with BuildKit and ensure 'docker' is available in PATH."
-        }
+        Assert-Cli -Name 'docker'
 
         foreach ($imageBuild in $ImageBuilds) {
             $dockerfileFull = Join-Path $RepositoryRoot $imageBuild.Dockerfile
@@ -501,9 +500,7 @@ function Build-TestAppDockerImages {
 
                 Write-Host "docker $($arguments -join ' ')" -ForegroundColor "Green"
                 & docker @arguments
-                if ($LASTEXITCODE -ne 0) {
-                    throw "docker build for $($imageBuild.Tag) failed with exit code $LASTEXITCODE."
-                }
+                Assert-LastExitCode -Activity "docker build for $($imageBuild.Tag)"
 
                 Write-Host "Done building $($imageBuild.Tag)." -ForegroundColor "Green"
             }
@@ -564,9 +561,7 @@ function Start-TestAppContainersDetached {
                 Write-Host "Removing existing container:" -ForegroundColor "Yellow"
                 Write-Host "    $($imageBuild.ContainerName)" -ForegroundColor "Yellow"
                 & docker rm -f $imageBuild.ContainerName
-                if ($LASTEXITCODE -ne 0) {
-                    throw "docker rm -f $($imageBuild.ContainerName) failed with exit code $LASTEXITCODE."
-                }
+                Assert-LastExitCode -Activity "docker rm -f $($imageBuild.ContainerName)"
             }
 
             $runArgs = @(
@@ -579,9 +574,7 @@ function Start-TestAppContainersDetached {
 
             Write-Host "docker $($runArgs -join ' ')" -ForegroundColor "Green"
             $containerId = & docker @runArgs
-            if ($LASTEXITCODE -ne 0) {
-                throw "docker run -d for $($imageBuild.Tag) failed with exit code $LASTEXITCODE."
-            }
+            Assert-LastExitCode -Activity "docker run -d for $($imageBuild.Tag)"
 
             Write-Host "Started:" -ForegroundColor "Green"
             Write-Host "    name=$($imageBuild.ContainerName)" -ForegroundColor "Green"
@@ -611,9 +604,7 @@ try {
     
     Stop-UdfProcesses -processName "MSBuild"
 
-    if ($null -eq (Get-Command dotnet -ErrorAction SilentlyContinue)) {
-        throw "Required: Install .NET SDK and ensure 'dotnet' is available in PATH. https://dotnet.microsoft.com/download"
-    }
+    Assert-Cli -Name 'dotnet'
 
     [string]$repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
     [string]$testsRoot = Join-Path $repositoryRoot 'tests'
@@ -685,25 +676,9 @@ try {
 }
 catch {
 
-    Write-Error "" -ErrorAction Continue
-    Write-Error "Caught an exception:" -ErrorAction Continue
-    Write-Error "Exception Type: $($_.Exception.GetType().FullName)" -ErrorAction Continue
-    Write-Error "Exception Message: $($_.Exception.Message)" -ErrorAction Continue
-    Write-Error "" -ErrorAction Continue
-
-    Write-Host "Script failed to execute." -ForegroundColor "Red"
-
-    if ($WaitOnExit) {
-        Read-Host "Press Enter to close the window ..."
-    }
-
+    Write-ScriptError -ErrorRecord $_ -WaitOnExit:$WaitOnExit
     exit 1
 }
 
-Write-Host ""
-Write-Host "Script executed successfully." -ForegroundColor "Green"
-
-if ($WaitOnExit) {
-    Read-Host "Press Enter to close the window ..."
-}
+Write-ScriptSuccess -WaitOnExit:$WaitOnExit
 

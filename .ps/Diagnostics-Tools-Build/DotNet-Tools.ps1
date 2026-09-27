@@ -74,6 +74,9 @@ if (-not (Test-Path -LiteralPath $corePath -PathType Container)) {
     throw "Required helper folder not found: '$corePath'."
 }
 
+. (Join-Path $modulePath '..\Core\Write-ScriptError.ps1')
+. (Join-Path $modulePath '..\Core\Write-ScriptSuccess.ps1')
+
 try {
 
     $packageIds = @(
@@ -236,25 +239,10 @@ try {
 }
 catch {
 
-    Write-Host ""
-    Write-Error "Caught an exception:" -ErrorAction Continue
-    Write-Error "Exception Type: $($_.Exception.GetType().FullName)" -ErrorAction Continue
-    Write-Error "Exception Message: $($_.Exception.Message)" -ErrorAction Continue
-    Write-Host ""
-    Write-Host "Script failed to execute." -ForegroundColor Red
-
-    if ($WaitOnExit) {
-        Read-Host "Press Enter to close the window ..."
-    }
-
+    Write-ScriptError -ErrorRecord $_ -WaitOnExit:$WaitOnExit
     EXIT 1
 }
 
-Write-Host ""
-Write-Host "Script executed successfully." -ForegroundColor Green
-
-if ($WaitOnExit) {
-    Read-Host "Press Enter to close the window ..."
-}
+Write-ScriptSuccess -WaitOnExit:$WaitOnExit
 
 EXIT 0

@@ -114,8 +114,8 @@ if (-not (Test-Path -LiteralPath $modulePath -PathType Container)) {
     throw "Required helper folder not found: '$modulePath'."
 }
 
-. (Join-Path $modulePath 'Core\Write-ImageBuildError.ps1')
-. (Join-Path $modulePath 'Core\Write-ImageBuildSuccess.ps1')
+. (Join-Path $modulePath '..\Core\Write-ScriptError.ps1')
+. (Join-Path $modulePath '..\Core\Write-ScriptSuccess.ps1')
 
 try {
 
@@ -124,12 +124,13 @@ try {
     Write-Output "Loading module files:"
 
     $moduleFiles = @(
-        'Core\Assert-ImageBuildDockerCli.ps1'
+        '..\Core\Assert-Cli.ps1'
+        '..\Core\Assert-LastExitCode.ps1'
+        '..\Core\Write-Section.ps1'
         'Core\Invoke-DockerImageBuild.ps1'
         'Core\Invoke-ImageBuildBatch.ps1'
         'Core\Write-ImageBuildSettings.ps1'
         'Core\Write-ImageBuildSummary.ps1'
-        'Core\Write-ImageBuildSection.ps1'
         'Core\Invoke-ImageBuildScript.ps1'
         'Core\Get-ImageBuildDefinitions.ps1'
         'Core\Initialize-ImageBuildToolsContext.ps1'
@@ -154,8 +155,8 @@ try {
 }
 catch {
 
-    Write-ImageBuildError -ErrorRecord $_ -WaitOnExit:$WaitOnExit
+    Write-ScriptError -ErrorRecord $_ -WaitOnExit:$WaitOnExit
     EXIT 1
 }
 
-Write-ImageBuildSuccess -WaitOnExit:$WaitOnExit
+Write-ScriptSuccess -WaitOnExit:$WaitOnExit

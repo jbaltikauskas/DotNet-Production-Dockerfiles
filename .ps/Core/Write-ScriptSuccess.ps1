@@ -1,13 +1,10 @@
-function Write-ImageBuildSuccess () {
+function Write-ScriptSuccess () {
     <#
     .SYNOPSIS
-        Prints the success banner after an Image-Build run.
+        Prints the success banner after a script run.
     .DESCRIPTION
-        Shared success path for the Image-Build entry scripts. Prompts for
-        Enter only when -WaitOnExit is set, so a terminal or CI run exits
-        immediately.
-    .PARAMETER WaitOnExit
-        When set, waits for Enter so a double-clicked console window stays open.
+        Shared success path for entry scripts. Prompts for Enter only when
+        -WaitOnExit is set, so a terminal or CI run exits immediately.
     .REMARKS
         1. Print the success banner.
         2. When WaitOnExit is set, wait for Enter.

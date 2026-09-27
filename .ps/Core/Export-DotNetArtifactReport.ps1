@@ -80,6 +80,9 @@ Param (
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 
+. (Join-Path $PSScriptRoot 'Write-ScriptError.ps1')
+. (Join-Path $PSScriptRoot 'Write-ScriptSuccess.ps1')
+
 try {
 
     $toolsDirectoryPath = [System.IO.Path]::GetFullPath($ToolsDirectory)
@@ -123,25 +126,10 @@ try {
 }
 catch {
 
-    Write-Host ""
-    Write-Error "Caught an exception:" -ErrorAction Continue
-    Write-Error "Exception Type: $($_.Exception.GetType().FullName)" -ErrorAction Continue
-    Write-Error "Exception Message: $($_.Exception.Message)" -ErrorAction Continue
-    Write-Host ""
-    Write-Host "Script failed to execute." -ForegroundColor Red
-
-    if ($WaitOnExit) {
-        Read-Host "Press Enter to close the window ..."
-    }
-
+    Write-ScriptError -ErrorRecord $_ -WaitOnExit:$WaitOnExit
     EXIT 1
 }
 
-Write-Host ""
-Write-Host "Script executed successfully." -ForegroundColor Green
-
-if ($WaitOnExit) {
-    Read-Host "Press Enter to close the window ..."
-}
+Write-ScriptSuccess -WaitOnExit:$WaitOnExit
 
 EXIT 0

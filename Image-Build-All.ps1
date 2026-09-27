@@ -9,7 +9,7 @@
     Top-down flow when this script runs:
 
         1. Resolve the repository root next to this script.
-        2. Dot-source Write-ImageBuildError and Write-ImageBuildSuccess from
+        2. Dot-source Write-ScriptError and Write-ScriptSuccess from
            .ps\ImageBuild\Core so failure and success paths mirror the
            per-distro scripts.
         3. Validate that DotNet-Tools.ps1 and the three per-distro scripts exist.
@@ -25,9 +25,9 @@
     and forwards -DotNetVersion and -NoCache. It does not pass -WaitOnExit.
 
     A failure in the tools script or any per-distro script is caught by the
-    outer try/catch, routed through Write-ImageBuildError, and the run exits
+    outer try/catch, routed through Write-ScriptError, and the run exits
     with code 1 ($ErrorActionPreference = 'Stop'). On success
-    Write-ImageBuildSuccess prints the green completion banner.
+    Write-ScriptSuccess prints the green completion banner.
 
     Images produced across the three sub-scripts for -DotNetVersion 10
     (the default):
@@ -98,9 +98,10 @@ if (-not (Test-Path -LiteralPath $modulePath -PathType Container)) {
     throw "Required helper folder not found: '$modulePath'."
 }
 
-. (Join-Path $modulePath 'Core\Write-ImageBuildError.ps1')
-. (Join-Path $modulePath 'Core\Write-ImageBuildSuccess.ps1')
-. (Join-Path $modulePath 'Core\Write-ImageBuildSection.ps1')
+. (Join-Path $modulePath '..\Core\Write-ScriptError.ps1')
+. (Join-Path $modulePath '..\Core\Write-ScriptSuccess.ps1')
+. (Join-Path $modulePath '..\Core\Write-Section.ps1')
+. (Join-Path $modulePath '..\Core\Assert-LastExitCode.ps1')
 . (Join-Path $modulePath 'Core\Invoke-ImageBuildScript.ps1')
 
 try {
@@ -127,8 +128,8 @@ try {
 }
 catch {
 
-    Write-ImageBuildError -ErrorRecord $_
+    Write-ScriptError -ErrorRecord $_
     EXIT 1
 }
 
-Write-ImageBuildSuccess
+Write-ScriptSuccess

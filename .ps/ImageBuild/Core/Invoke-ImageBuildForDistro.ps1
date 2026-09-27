@@ -70,7 +70,7 @@ function Invoke-ImageBuildForDistro () {
             -ImageBuilds $imageBuilds
 
         Write-Host "Verifying docker CLI:" -ForegroundColor Green
-        $dockerVersion = Assert-ImageBuildDockerCli
+        $dockerVersion = Assert-Cli -Name 'docker' -VersionArgs @('version', '--format', '{{.Client.Version}}')
         Write-Host "Done verifying docker CLI: $dockerVersion" -ForegroundColor Green
         Write-Output ""
 

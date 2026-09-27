@@ -48,12 +48,10 @@ function Invoke-ImageBuildScript () {
             $bannerMessage = "$bannerMessage $BannerSuffix"
         }
 
-        Write-ImageBuildSection -Message $bannerMessage
+        Write-Section -Message $bannerMessage
 
         & $scriptPath @Arguments
 
-        if ($LASTEXITCODE) {
-            throw "$RelativePath failed with exit code $LASTEXITCODE."
-        }
+        Assert-LastExitCode -Activity $RelativePath
     }
 }
