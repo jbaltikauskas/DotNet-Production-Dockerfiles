@@ -19,7 +19,7 @@
        11. Delete win* and browser subfolders from dockerfiles\.build\dotnet-tools\runtimes.
        12. Create dockerfiles\.dotnet-tools, or clear it when it already exists.
        13. Copy dockerfiles\.build\dotnet-tools into dockerfiles\.dotnet-tools.
-       14. Scan dockerfiles\.dotnet-tools and write the assembly version report
+       14. Scan dockerfiles\.dotnet-tools and export the assembly version report
            to dockerfiles\.dotnet-tools\dotnet-assembly-report.md.
 
     Image-Build-All.ps1 and Image-TestBuild-DotNet-Tools-TestApp.ps1 invoke
@@ -115,7 +115,7 @@ try {
         '..\Core\Get-DotNetToolsFileInfo.ps1'
         '..\Core\New-DotNetToolsMarkdownTable.ps1'
         '..\Core\ConvertTo-DotNetToolsMarkdownReport.ps1'
-        '..\Core\Write-DotNetToolsAssemblyReport.ps1'
+        '..\Core\Export-DotNetToolsAssemblyReport.ps1'
     )
 
     foreach ($relativePath in $moduleFiles) {
@@ -222,11 +222,11 @@ try {
     Write-Host "Done copying tools into dockerfiles: $publishedCount files" -ForegroundColor Green
     Write-Output ""
 
-    Write-Host "Writing assembly report:" -ForegroundColor Green
-    $report = Write-DotNetToolsAssemblyReport `
+    Write-Host "Exporting assembly report:" -ForegroundColor Green
+    $report = Export-DotNetToolsAssemblyReport `
         -ToolsDirectory $dockerfilesToolDirectory `
         -OutputPath $assemblyReportPath
-    Write-Host "Done writing assembly report: $($report.ManagedCount) managed assemblies, $($report.OtherCount) other files, $($report.UnreadableCount) unreadable." -ForegroundColor Green
+    Write-Host "Done exporting assembly report: $($report.ManagedCount) managed assemblies, $($report.OtherCount) other files, $($report.UnreadableCount) unreadable." -ForegroundColor Green
     Write-Output ""
 
     Write-Host "Packages are in $buildDirectory" -ForegroundColor Cyan

@@ -93,7 +93,7 @@ try {
         'Get-DotNetToolsFileInfo.ps1'
         'New-DotNetToolsMarkdownTable.ps1'
         'ConvertTo-DotNetToolsMarkdownReport.ps1'
-        'Write-DotNetToolsAssemblyReport.ps1'
+        'Export-DotNetToolsAssemblyReport.ps1'
     )
 
     foreach ($moduleFileName in $moduleFiles) {
@@ -114,9 +114,9 @@ try {
     Write-Output "---------------------------- END: Settings ----------------------------"
     Write-Output ""
 
-    Write-Host "Writing assembly report:" -ForegroundColor Green
-    $result = Write-DotNetToolsAssemblyReport -ToolsDirectory $toolsDirectoryPath -OutputPath $outputFilePath
-    Write-Host "Done writing assembly report: $($result.ManagedCount) managed assemblies, $($result.OtherCount) other files, $($result.UnreadableCount) unreadable." -ForegroundColor Green
+    Write-Host "Exporting assembly report:" -ForegroundColor Green
+    $result = Export-DotNetToolsAssemblyReport -ToolsDirectory $toolsDirectoryPath -OutputPath $outputFilePath
+    Write-Host "Done exporting assembly report: $($result.ManagedCount) managed assemblies, $($result.OtherCount) other files, $($result.UnreadableCount) unreadable." -ForegroundColor Green
     Write-Output ""
 
     Write-Host "Report is in $($result.ReportPath)" -ForegroundColor Cyan

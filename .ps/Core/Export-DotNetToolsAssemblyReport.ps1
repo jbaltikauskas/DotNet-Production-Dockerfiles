@@ -1,12 +1,12 @@
-function Write-DotNetToolsAssemblyReport () {
+function Export-DotNetToolsAssemblyReport () {
     <#
     .SYNOPSIS
-        Scans a tools folder and writes the markdown assembly report.
+        Scans a tools folder and exports the markdown assembly report.
     .DESCRIPTION
         Collects Get-DotNetToolsFileInfo for every file under ToolsDirectory,
         except the report file itself so a re-run does not list the previous
         report. Files that cannot be read are reported as warnings instead of
-        failing the run. Writes UTF-8 without BOM and creates the parent folder
+        failing the run. Exports UTF-8 without BOM and creates the parent folder
         when missing. Returns an object with the report path and counts.
         Requires Get-DotNetToolsAssemblyInfo.ps1, Get-DotNetToolsFileInfo.ps1,
         New-DotNetToolsMarkdownTable.ps1, and
@@ -16,7 +16,7 @@ function Write-DotNetToolsAssemblyReport () {
         2. Enumerate files recursively, skipping OutputPath.
         3. Collect file info; record failures with their message.
         4. Build the markdown with ConvertTo-DotNetToolsMarkdownReport.
-        5. Write the report and return path and counts.
+        5. Export the report and return path and counts.
     #>
     [CmdletBinding()]
     Param (
