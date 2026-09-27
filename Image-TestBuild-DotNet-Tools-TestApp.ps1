@@ -106,14 +106,14 @@
 
 [CmdletBinding()]
 Param (
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $false , HelpMessage = 'The .NET major version used in the Dockerfile folder and image tags. Defaults to 10.')]
     [ValidateNotNullOrEmpty()]
     [string]$DotNetVersion = '10',
 
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $false, HelpMessage = 'Pass --no-cache to docker buildx build. Forwarded to each sub-script. Defaults to $false.')]
     [bool]$NoCache = $false,
 
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $false, HelpMessage = 'Build configuration forwarded to the test-app build (Debug, Release, or custom). Defaults to Debug.')]
     [ValidateNotNullOrEmpty()]
     [string]$BuildConfiguration = 'Debug'
 )

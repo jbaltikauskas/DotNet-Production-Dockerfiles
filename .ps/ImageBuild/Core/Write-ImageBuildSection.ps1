@@ -11,7 +11,7 @@ function Write-ImageBuildSection () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The banner text shown between the two cyan rules.')]
         [ValidateNotNullOrEmpty()]
         [string]$Message
     )

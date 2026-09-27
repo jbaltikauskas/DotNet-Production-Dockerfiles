@@ -20,11 +20,11 @@ function Write-DotNetToolsAssemblyReport () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Folder to scan recursively for .NET artifacts.')]
         [ValidateNotNullOrEmpty()]
         [string]$ToolsDirectory,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Markdown report file to write. The parent folder is created when missing.')]
         [ValidateNotNullOrEmpty()]
         [string]$OutputPath
     )

@@ -16,19 +16,19 @@ function Get-ImageBuildDefinitions () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Distro label used in the Dockerfile folder and image tags, for example alpine or ubuntu-chiseled.')]
         [ValidateNotNullOrEmpty()]
         [string]$DistroLabel,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The .NET major version used in the Dockerfile folder and image tags.')]
         [ValidateNotNullOrEmpty()]
         [string]$DotNetVersion,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Build target for the lean base image, for example aspnet-base or runtime-base.')]
         [ValidateNotNullOrEmpty()]
         [string]$BaseTarget,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, HelpMessage = 'Return only the diagnostics-tools (final) build and skip the lean base image.')]
         [switch]$ToolsOnly
     )
 

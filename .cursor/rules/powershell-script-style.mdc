@@ -37,7 +37,16 @@ The `$PSNativeCommandUseErrorActionPreference` line makes native commands (docke
 
 Rules for the param block:
 
-- One `[Parameter(...)]` attribute per parameter, with `Mandatory`, `Position` when meaningful, and `HelpMessage`.
+- One `[Parameter(...)]` attribute per parameter. **`HelpMessage` is mandatory** on every parameter — script `Param` and every function `Param`. A parameter without `HelpMessage` is incomplete.
+- Always set `Mandatory` explicitly (`$true` or `$false`). Add `Position` only when the parameter is positional.
+- Required form (single-quoted `HelpMessage`; state the default in the message when the parameter has one):
+
+```powershell
+[Parameter(Mandatory = $false, HelpMessage = 'The .NET major version used in the Dockerfile folder and image tags. Defaults to 10.')]
+[ValidateNotNullOrEmpty()]
+[string]$DotNetVersion = '10'
+```
+
 - `[ValidateNotNullOrEmpty()]` on every required string. Use `[ValidateSet(...)]`, `[ValidateRange(...)]`, or `[ValidatePattern(...)]` when applicable.
 - Camel case parameter names match the reference script. Pick one casing and stick with it across the repo so diffs stay clean.
 - Default values go on the parameter line, not in the body.
@@ -138,7 +147,7 @@ function Convert-SecureStringToPlain () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $false, Position = 0)]
+        [Parameter(Mandatory = $false, Position = 0, HelpMessage = 'SecureString to decode. Omit or pass $null to return $null.')]
         [SecureString]$Secret
     )
 
@@ -189,6 +198,7 @@ Match the reference exactly so logs look the same across scripts:
 
 ## What NOT to do
 
+- Do not omit `HelpMessage` on any parameter. Every `[Parameter()]` must include it, including optional parameters, switches, and function parameters.
 - Do not skip the help block "because the script is small". Future readers count on it.
 - Do not add **`End { }`** to functions.
 
@@ -208,7 +218,7 @@ Match the reference exactly so logs look the same across scripts:
 
 1. Help block has `.SYNOPSIS`, `.DESCRIPTION` (with numbered flow), one `.PARAMETER` per parameter, `.INPUTS`, `.OUTPUTS`, `.NOTES`, two or more `.EXAMPLE`.
 2. `#Requires -Version`, `$ErrorActionPreference = 'Stop'`, `$PSNativeCommandUseErrorActionPreference = $true` are set.
-3. Every parameter has `[Parameter(...)]` with `HelpMessage` and an appropriate `Validate*` attribute.
+3. Every parameter (script and function) has `[Parameter(Mandatory = ..., HelpMessage = '...')]`. `HelpMessage` is mandatory. Add `Validate*` when the type needs it.
 4. Every function is an advanced function (`[CmdletBinding()]` + `Param`). **No `End` blocks.** Functions with ≥1 parameter (non-secret) use **`Begin` + `Write-Debug`** on **`$PSBoundParameters`** then **`Process`**, matching **`Write-LightRagReadme.ps1`**. After **`Process {`**, one empty line before the first inner statement.
 5. Every function has comment-based help with **`.SYNOPSIS`**, **`.DESCRIPTION`**, and **`.REMARKS`** (see **Function comment-based help**). In `.REMARKS`, skip printing-only steps unless that is the function's contract.
 6. The orchestration lives in one `try { ... }` block. After every **`try {`**, one empty line before the first inner statement (including nested **`try`**).

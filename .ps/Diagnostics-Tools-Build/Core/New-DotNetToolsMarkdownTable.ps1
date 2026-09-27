@@ -13,11 +13,11 @@ function New-DotNetToolsMarkdownTable () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Column header cells for the table, one per column.')]
         [ValidateNotNullOrEmpty()]
         [string[]]$Headers,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Data rows, each a string array with one cell per column. May be empty.')]
         [AllowEmptyCollection()]
         [System.Collections.Generic.List[string[]]]$Rows
     )
@@ -60,7 +60,7 @@ function ConvertTo-DotNetToolsMarkdownCell () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, HelpMessage = 'The cell value to escape. Null or empty becomes an em dash.')]
         [AllowNull()]
         [AllowEmptyString()]
         [string]$Value
@@ -94,7 +94,7 @@ function Format-DotNetToolsFileSize () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'File size in bytes to format as B, KB, or MB.')]
         [ValidateRange(0, [long]::MaxValue)]
         [long]$Bytes
     )

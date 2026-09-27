@@ -15,18 +15,18 @@ function Invoke-ImageBuildScript () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Absolute path to the repository root that RelativePath is resolved against.')]
         [ValidateNotNullOrEmpty()]
         [string]$RepositoryRoot,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Repository-relative path of the .ps1 script to invoke.')]
         [ValidateNotNullOrEmpty()]
         [string]$RelativePath,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, HelpMessage = 'Named arguments splatted into the invoked script. Defaults to none.')]
         [hashtable]$Arguments = @{},
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, HelpMessage = 'Extra text appended to the section banner, for example the forwarded switches.')]
         [string]$BannerSuffix
     )
 

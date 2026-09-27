@@ -76,11 +76,11 @@
 
 [CmdletBinding()]
 Param (
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $false, HelpMessage = 'The .NET major version used in the Dockerfile folder and image tags. Forwarded to each per-distro script. Defaults to 10.')]
     [ValidateNotNullOrEmpty()]
     [string]$DotNetVersion = '10',
 
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $false, HelpMessage = 'Pass --no-cache to docker buildx build. Forwarded to each per-distro script. Defaults to $false.')]
     [bool]$NoCache = $false
 )
 

@@ -14,15 +14,15 @@ function Initialize-ImageBuildToolsContext () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Absolute path to the repository root that DotNetToolsContext is resolved against.')]
         [ValidateNotNullOrEmpty()]
         [string]$RepositoryRoot,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Repository-relative path of the merged dotnet-tools folder, for example dockerfiles/.dotnet-tools.')]
         [ValidateNotNullOrEmpty()]
         [string]$DotNetToolsContext,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The image-build definitions; the tools folder is prepared only when one sets IncludeTools.')]
         [ValidateNotNull()]
         [object[]]$ImageBuilds
     )

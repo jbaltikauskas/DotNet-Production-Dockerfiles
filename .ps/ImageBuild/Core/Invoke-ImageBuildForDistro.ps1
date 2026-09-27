@@ -18,26 +18,26 @@ function Invoke-ImageBuildForDistro () {
     #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Absolute path to the repository root that docker builds run from.')]
         [ValidateNotNullOrEmpty()]
         [string]$RepositoryRoot,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Distro label used in the Dockerfile folder and image tags, for example alpine or ubuntu-chiseled.')]
         [ValidateNotNullOrEmpty()]
         [string]$DistroLabel,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'The .NET major version used in the Dockerfile folder and image tags.')]
         [ValidateNotNullOrEmpty()]
         [string]$DotNetVersion,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Build target for the lean base image, for example aspnet-base or runtime-base.')]
         [ValidateNotNullOrEmpty()]
         [string]$BaseTarget,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, HelpMessage = 'Pass --no-cache to docker buildx build.')]
         [bool]$NoCache,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, HelpMessage = 'Build only the diagnostics-tools image (target: final) and skip the lean base image.')]
         [switch]$ToolsOnly
     )
 

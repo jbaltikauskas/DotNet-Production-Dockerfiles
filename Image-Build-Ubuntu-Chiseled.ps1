@@ -90,17 +90,17 @@
 
 [CmdletBinding()]
 Param (
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $false, HelpMessage = 'The .NET major version used in the Dockerfile folder and image tags. Defaults to 10.')]
     [ValidateNotNullOrEmpty()]
     [string]$DotNetVersion = '10',
 
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $false, HelpMessage = 'Pass --no-cache to docker buildx build. Defaults to $false.')]
     [bool]$NoCache = $false,
 
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $false, HelpMessage = 'Build only the diagnostics-tools image (target: final) and skip the lean base image.')]
     [switch]$ToolsOnly,
 
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $false, HelpMessage = 'Wait for Enter after success or failure so a double-clicked console window stays open. Omit it in a terminal or CI run.')]
     [switch]$WaitOnExit
 )
 
