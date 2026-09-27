@@ -419,3 +419,6 @@ FodyWeavers.xsd
 /tests/DotNet-Tools-TestApp/.dotnetbuild.logs
 bin
 /dockerfiles/.dotnet-tools
+
+# Claude Code personal settings
+.claude/settings.local.json
