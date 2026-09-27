@@ -123,9 +123,7 @@ if (-not (Test-Path -LiteralPath $modulePath -PathType Container)) {
 
 try {
 
-    $distroLabel = 'ubuntu-chiseled'
     $repositoryRoot = [System.IO.Path]::GetFullPath($scriptRoot)
-    $dotnetToolsContext = 'dockerfiles/.dotnet-tools'
 
     Write-Output "Loading module files:"
 
@@ -135,6 +133,11 @@ try {
         'Core\Invoke-ImageBuildBatch.ps1'
         'Core\Write-ImageBuildSettings.ps1'
         'Core\Write-ImageBuildSummary.ps1'
+        'Core\Write-ImageBuildSection.ps1'
+        'Core\Invoke-ImageBuildScript.ps1'
+        'Core\Get-ImageBuildDefinitions.ps1'
+        'Core\Initialize-ImageBuildToolsContext.ps1'
+        'Core\Invoke-ImageBuildForDistro.ps1'
     )
 
     foreach ($relativePath in $moduleFiles) {
@@ -145,91 +148,13 @@ try {
 
     Write-Host "Done loading module files." -ForegroundColor Green
 
-    $versionFolder = "dockerfiles/ubuntu-chiseled/${DotNetVersion}"
-    $dockerfile = "${versionFolder}/Dockerfile"
-    $toolsImageTag = "contoso/ubuntu-chiseled-net-dotnet-tools-${DotNetVersion}:latest"
-    $baseImageTag = "contoso/ubuntu-chiseled-net-${DotNetVersion}:latest"
-
-    $imageBuilds = [System.Collections.Generic.List[pscustomobject]]::new()
-
-    $imageBuilds.Add([pscustomobject]@{
-        Distro       = $distroLabel
-        Dockerfile   = $dockerfile
-        BuildContext = $versionFolder
-        BuildTarget  = 'final'
-        Tag          = $toolsImageTag
-        BuildArgs    = @{}
-        IncludeTools = $true
-    })
-
-    if (-not $ToolsOnly) {
-        $imageBuilds.Add([pscustomobject]@{
-            Distro       = $distroLabel
-            Dockerfile   = $dockerfile
-            BuildContext = $versionFolder
-            BuildTarget  = 'runtime-base'
-            Tag          = $baseImageTag
-            BuildArgs    = @{}
-            IncludeTools = $false
-        })
-    }
-
-    $buildsToolsImage = $false
-    foreach ($imageBuild in $imageBuilds) {
-        if ($imageBuild.IncludeTools) {
-            $buildsToolsImage = $true
-            break
-        }
-    }
-
-    if ($buildsToolsImage) {
-        $toolsContextFull = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $dotnetToolsContext))
-        $toolsContextReady = $false
-        if (Test-Path -LiteralPath $toolsContextFull -PathType Container) {
-            $toolsContextReady = @(Get-ChildItem -LiteralPath $toolsContextFull -Force).Count -gt 0
-        }
-
-        if ($toolsContextReady) {
-            Write-Host "Using existing ${dotnetToolsContext}." -ForegroundColor Green
-        }
-        else {
-            $toolsScriptRelativePath = '.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1'
-            $toolsScriptPath = Join-Path $repositoryRoot $toolsScriptRelativePath
-            if (-not (Test-Path -LiteralPath $toolsScriptPath -PathType Leaf)) {
-                throw "Required diagnostics-tools script was not found: '$toolsScriptPath'."
-            }
-
-            Write-Host ""
-            Write-Host "=============================================================" -ForegroundColor Cyan
-            Write-Host "  Invoking $toolsScriptRelativePath" -ForegroundColor Cyan
-            Write-Host "=============================================================" -ForegroundColor Cyan
-
-            & $toolsScriptPath
-            if ($LASTEXITCODE) {
-                throw "$toolsScriptRelativePath failed with exit code $LASTEXITCODE."
-            }
-        }
-    }
-
-    Write-ImageBuildSettings `
+    Invoke-ImageBuildForDistro `
         -RepositoryRoot $repositoryRoot `
-        -Distro $distroLabel `
+        -DistroLabel 'ubuntu-chiseled' `
+        -DotNetVersion $DotNetVersion `
+        -BaseTarget 'runtime-base' `
         -NoCache $NoCache `
-        -DotNetToolsContext $dotnetToolsContext `
-        -ImageBuilds $imageBuilds
-
-    Write-Host "Verifying docker CLI:" -ForegroundColor Green
-    $dockerVersion = Assert-ImageBuildDockerCli
-    Write-Host "Done verifying docker CLI: $dockerVersion" -ForegroundColor Green
-    Write-Output ""
-
-    Invoke-ImageBuildBatch `
-        -RepositoryRoot $repositoryRoot `
-        -ImageBuilds $imageBuilds `
-        -DotNetToolsContext $dotnetToolsContext `
-        -NoCache $NoCache
-
-    Write-ImageBuildSummary -ImageBuilds $imageBuilds
+        -ToolsOnly:$ToolsOnly
 }
 catch {
 

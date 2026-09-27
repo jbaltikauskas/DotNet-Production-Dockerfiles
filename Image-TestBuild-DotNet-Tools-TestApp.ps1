@@ -137,6 +137,8 @@ if (-not (Test-Path -LiteralPath $modulePath -PathType Container)) {
 
 . (Join-Path $modulePath 'Core\Write-ImageBuildError.ps1')
 . (Join-Path $modulePath 'Core\Write-ImageBuildSuccess.ps1')
+. (Join-Path $modulePath 'Core\Write-ImageBuildSection.ps1')
+. (Join-Path $modulePath 'Core\Invoke-ImageBuildScript.ps1')
 
 try {
 
@@ -149,33 +151,13 @@ try {
     $toolsScriptRelativePath = '.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1'
     $testAppScriptRelativePath = '.ps\TestApp\Build-DotNet-Tools-TestApp.ps1'
 
-    $toolsScriptPath = Join-Path $repositoryRoot $toolsScriptRelativePath
-    if (-not (Test-Path -LiteralPath $toolsScriptPath -PathType Leaf)) {
-        throw "Required diagnostics-tools script was not found: '$toolsScriptPath'."
-    }
-
-    foreach ($relativePath in $distroScripts) {
-        $scriptPath = Join-Path $repositoryRoot $relativePath
-        if (-not (Test-Path -LiteralPath $scriptPath -PathType Leaf)) {
-            throw "Required per-distro script was not found: '$scriptPath'."
-        }
-    }
-
-    $testAppScriptPath = Join-Path $repositoryRoot $testAppScriptRelativePath
-    if (-not (Test-Path -LiteralPath $testAppScriptPath -PathType Leaf)) {
-        throw "Required test-app build script was not found: '$testAppScriptPath'."
-    }
-
     $buildDirectory = Join-Path $testsRoot '.build'
     if (-not (Test-Path -LiteralPath $buildDirectory -PathType Container)) {
         New-Item -Path $buildDirectory -ItemType Directory -Force | Out-Null
     }
 
     $commandsFilePath = Join-Path $buildDirectory '.DotNet-Tools-Commands.txt'
-    Write-Host ""
-    Write-Host "=============================================================" -ForegroundColor Cyan
-    Write-Host "  Writing $commandsFilePath" -ForegroundColor Cyan
-    Write-Host "=============================================================" -ForegroundColor Cyan
+    Write-ImageBuildSection -Message "Writing $commandsFilePath"
 
     $commandLines = @(
         '# dotnet-trace'
@@ -208,41 +190,23 @@ try {
     Set-Content -LiteralPath $commandsFilePath -Value $commandLines -Encoding utf8
     Write-Host "Done writing $commandsFilePath" -ForegroundColor Green
 
-    Write-Host ""
-    Write-Host "=============================================================" -ForegroundColor Cyan
-    Write-Host "  Invoking $toolsScriptRelativePath" -ForegroundColor Cyan
-    Write-Host "=============================================================" -ForegroundColor Cyan
-
-    & $toolsScriptPath
-    if ($LASTEXITCODE) {
-        throw "$toolsScriptRelativePath failed with exit code $LASTEXITCODE."
-    }
+    Invoke-ImageBuildScript `
+        -RepositoryRoot $repositoryRoot `
+        -RelativePath $toolsScriptRelativePath
 
     foreach ($relativePath in $distroScripts) {
-        $scriptPath = Join-Path $repositoryRoot $relativePath
-        Write-Host ""
-        Write-Host "=============================================================" -ForegroundColor Cyan
-        Write-Host "  Invoking $relativePath -ToolsOnly -DotNetVersion $DotNetVersion" -ForegroundColor Cyan
-        Write-Host "=============================================================" -ForegroundColor Cyan
-
-        & $scriptPath -DotNetVersion $DotNetVersion -NoCache $NoCache -ToolsOnly
-        if ($LASTEXITCODE) {
-            throw "$relativePath failed with exit code $LASTEXITCODE."
-        }
+        Invoke-ImageBuildScript `
+            -RepositoryRoot $repositoryRoot `
+            -RelativePath $relativePath `
+            -Arguments @{ DotNetVersion = $DotNetVersion; NoCache = $NoCache; ToolsOnly = $true } `
+            -BannerSuffix "-ToolsOnly -DotNetVersion $DotNetVersion"
     }
 
-    Write-Host ""
-    Write-Host "=============================================================" -ForegroundColor Cyan
-    Write-Host "  Invoking $testAppScriptRelativePath (build app, images, run detached)" -ForegroundColor Cyan
-    Write-Host "=============================================================" -ForegroundColor Cyan
-
-    & $testAppScriptPath `
-        -buildConfiguration $BuildConfiguration `
-        -DotNetVersion $DotNetVersion `
-        -NoCache $NoCache
-    if ($LASTEXITCODE) {
-        throw "$testAppScriptRelativePath failed with exit code $LASTEXITCODE."
-    }
+    Invoke-ImageBuildScript `
+        -RepositoryRoot $repositoryRoot `
+        -RelativePath $testAppScriptRelativePath `
+        -Arguments @{ buildConfiguration = $BuildConfiguration; DotNetVersion = $DotNetVersion; NoCache = $NoCache } `
+        -BannerSuffix "(build app, images, run detached)"
 }
 catch {
 

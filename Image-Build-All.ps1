@@ -100,8 +100,12 @@ if (-not (Test-Path -LiteralPath $modulePath -PathType Container)) {
 
 . (Join-Path $modulePath 'Core\Write-ImageBuildError.ps1')
 . (Join-Path $modulePath 'Core\Write-ImageBuildSuccess.ps1')
+. (Join-Path $modulePath 'Core\Write-ImageBuildSection.ps1')
+. (Join-Path $modulePath 'Core\Invoke-ImageBuildScript.ps1')
 
 try {
+
+    $repositoryRoot = [System.IO.Path]::GetFullPath($scriptRoot)
 
     $distroScripts = @(
         'Image-Build-Alpine.ps1'
@@ -109,37 +113,16 @@ try {
         'Image-Build-Ubuntu-Chiseled.ps1'
     )
 
-    $toolsScriptRelativePath = '.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1'
-    $toolsScriptPath = Join-Path $scriptRoot $toolsScriptRelativePath
-    if (-not (Test-Path -LiteralPath $toolsScriptPath -PathType Leaf)) {
-        throw "Required diagnostics-tools script was not found: '$toolsScriptPath'."
-    }
+    Invoke-ImageBuildScript `
+        -RepositoryRoot $repositoryRoot `
+        -RelativePath '.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1'
 
     foreach ($relativePath in $distroScripts) {
-        $scriptPath = Join-Path $scriptRoot $relativePath
-        if (-not (Test-Path -LiteralPath $scriptPath -PathType Leaf)) {
-            throw "Required per-distro script was not found: '$scriptPath'."
-        }
-    }
-
-    Write-Host ""
-    Write-Host "=============================================================" -ForegroundColor Cyan
-    Write-Host "  Invoking $toolsScriptRelativePath" -ForegroundColor Cyan
-    Write-Host "=============================================================" -ForegroundColor Cyan
-
-    & $toolsScriptPath
-    if ($LASTEXITCODE) {
-        throw "$toolsScriptRelativePath failed with exit code $LASTEXITCODE."
-    }
-
-    foreach ($relativePath in $distroScripts) {
-        $scriptPath = Join-Path $scriptRoot $relativePath
-        Write-Host ""
-        Write-Host "=============================================================" -ForegroundColor Cyan
-        Write-Host "  Invoking $relativePath -DotNetVersion $DotNetVersion" -ForegroundColor Cyan
-        Write-Host "=============================================================" -ForegroundColor Cyan
-
-        & $scriptPath -DotNetVersion $DotNetVersion -NoCache $NoCache
+        Invoke-ImageBuildScript `
+            -RepositoryRoot $repositoryRoot `
+            -RelativePath $relativePath `
+            -Arguments @{ DotNetVersion = $DotNetVersion; NoCache = $NoCache } `
+            -BannerSuffix "-DotNetVersion $DotNetVersion"
     }
 }
 catch {
