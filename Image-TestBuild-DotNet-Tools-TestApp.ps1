@@ -28,6 +28,9 @@
              - copies artifacts to tests\.build
              - builds the three test-app images
              - starts each container detached
+       10. Invoke .ps\Diagnostics-Tools-Build\DotNet-Tools-Report.ps1 to scan
+           dockerfiles\.dotnet-tools and write the assembly report straight to
+           tests\.build\dotnet-assembly-report.md.
 
     Each per-distro script builds only its diagnostics-tools image tagged
     :latest (target: final). The lean aspnet-base and runtime-base images
@@ -72,8 +75,9 @@
     None. Sub-scripts are fixed in this script.
 
 .OUTPUTS
-    Host messages, docker CLI output, and dotnet CLI output. Exit code 0 on
-    success; exit code 1 if any sub-script fails.
+    Host messages, docker CLI output, and dotnet CLI output, plus
+    tests\.build\dotnet-assembly-report.md. Exit code 0 on success; exit
+    code 1 if any sub-script fails.
 
 .NOTES
     Requires PowerShell 7.2+, a working Docker installation with buildx, the
@@ -150,11 +154,14 @@ try {
 
     $toolsScriptRelativePath = '.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1'
     $testAppScriptRelativePath = '.ps\TestApp\Build-DotNet-Tools-TestApp.ps1'
+    $reportScriptRelativePath = '.ps\Diagnostics-Tools-Build\DotNet-Tools-Report.ps1'
 
     $buildDirectory = Join-Path $testsRoot '.build'
     if (-not (Test-Path -LiteralPath $buildDirectory -PathType Container)) {
         New-Item -Path $buildDirectory -ItemType Directory -Force | Out-Null
     }
+
+    $assemblyReportPath = Join-Path $buildDirectory 'dotnet-assembly-report.md'
 
     $commandsFilePath = Join-Path $buildDirectory '.DotNet-Tools-Commands.txt'
     Write-ImageBuildSection -Message "Writing $commandsFilePath"
@@ -207,6 +214,12 @@ try {
         -RelativePath $testAppScriptRelativePath `
         -Arguments @{ buildConfiguration = $BuildConfiguration; DotNetVersion = $DotNetVersion; NoCache = $NoCache } `
         -BannerSuffix "(build app, images, run detached)"
+
+    Invoke-ImageBuildScript `
+        -RepositoryRoot $repositoryRoot `
+        -RelativePath $reportScriptRelativePath `
+        -Arguments @{ OutputPath = $assemblyReportPath } `
+        -BannerSuffix "-OutputPath $assemblyReportPath"
 }
 catch {
 
