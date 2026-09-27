@@ -2,8 +2,8 @@
 #Requires -Version 7.2
 <#
 .SYNOPSIS
-    Builds every Contoso .NET 10 production Docker base image by invoking the
-    three per-distro entry scripts.
+    Publishes the diagnostic NuGet tools, then builds every Contoso .NET 10
+    production Docker base image by invoking the three per-distro entry scripts.
 
 .DESCRIPTION
     Top-down flow when this script runs:
@@ -12,20 +12,22 @@
         2. Dot-source Write-ImageBuildError and Write-ImageBuildSuccess from
            .ps\ImageBuild\Core so failure and success paths mirror the
            per-distro scripts.
-        3. Validate that the three per-distro scripts exist.
-        4. Invoke Image-Build-Alpine.ps1          (primary base).
-        5. Invoke Image-Build-Ubuntu.ps1          (secondary base).
-        6. Invoke Image-Build-Ubuntu-Chiseled.ps1 (last-resort distroless).
+        3. Validate that DotNet-Tools.ps1 and the three per-distro scripts exist.
+        4. Invoke .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1, which writes
+           dockerfiles\.build and dockerfiles\.dotnet-tools.
+        5. Invoke Image-Build-Alpine.ps1          (primary base).
+        6. Invoke Image-Build-Ubuntu.ps1          (secondary base).
+        7. Invoke Image-Build-Ubuntu-Chiseled.ps1 (last-resort distroless).
 
     Each per-distro script builds its dotnet-tools image tagged `:latest` and
     prints its own settings, docker version, build progress, and summary
-    banners. This script adds no logic of its own beyond ordering the three
-    calls and forwarding -DotNetVersion and -NoCache.
+    banners. This script orders that tools publish and the three image builds,
+    and forwards -DotNetVersion and -NoCache. It does not pass -WaitOnExit.
 
-    A failure in any per-distro script is caught by the outer try/catch,
-    routed through Write-ImageBuildError, and the run exits with code 1
-    ($ErrorActionPreference = 'Stop'). On success Write-ImageBuildSuccess
-    prints the green completion banner.
+    A failure in the tools script or any per-distro script is caught by the
+    outer try/catch, routed through Write-ImageBuildError, and the run exits
+    with code 1 ($ErrorActionPreference = 'Stop'). On success
+    Write-ImageBuildSuccess prints the green completion banner.
 
     Images produced across the three sub-scripts for -DotNetVersion 10
     (the default):
@@ -48,17 +50,20 @@
     None. Sub-scripts are fixed in this script.
 
 .OUTPUTS
-    Host messages and docker CLI output from each sub-script. Exit code 0 on
-    success; exit code 1 if any sub-script fails.
+    Host messages from the tools publish, and docker CLI output from each
+    image script. Exit code 0 on success; exit code 1 if any sub-script fails.
 
 .NOTES
-    Requires PowerShell 7.2+ and a working Docker installation with buildx.
-    Requires the dockerfiles/.dotnet-tools folder produced by
-    .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1.
+    Requires PowerShell 7.2+, a working Docker installation with buildx, and
+    network access to NuGet. This script runs
+    .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1, which downloads the
+    diagnostic packages into dockerfiles\.build and publishes the merged
+    Linux tree to dockerfiles\.dotnet-tools.
 
 .EXAMPLE
     PS> .\Image-Build-All.ps1
-    Builds every image in all three distros.
+    Publishes dockerfiles\.build and dockerfiles\.dotnet-tools, then builds
+    every image in all three distros.
 
 .EXAMPLE
     PS> .\Image-Build-All.ps1 -NoCache:$false
@@ -104,11 +109,27 @@ try {
         'Image-Build-Ubuntu-Chiseled.ps1'
     )
 
+    $toolsScriptRelativePath = '.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1'
+    $toolsScriptPath = Join-Path $scriptRoot $toolsScriptRelativePath
+    if (-not (Test-Path -LiteralPath $toolsScriptPath -PathType Leaf)) {
+        throw "Required diagnostics-tools script was not found: '$toolsScriptPath'."
+    }
+
     foreach ($relativePath in $distroScripts) {
         $scriptPath = Join-Path $scriptRoot $relativePath
         if (-not (Test-Path -LiteralPath $scriptPath -PathType Leaf)) {
             throw "Required per-distro script was not found: '$scriptPath'."
         }
+    }
+
+    Write-Host ""
+    Write-Host "=============================================================" -ForegroundColor Cyan
+    Write-Host "  Invoking $toolsScriptRelativePath" -ForegroundColor Cyan
+    Write-Host "=============================================================" -ForegroundColor Cyan
+
+    & $toolsScriptPath
+    if ($LASTEXITCODE) {
+        throw "$toolsScriptRelativePath failed with exit code $LASTEXITCODE."
     }
 
     foreach ($relativePath in $distroScripts) {

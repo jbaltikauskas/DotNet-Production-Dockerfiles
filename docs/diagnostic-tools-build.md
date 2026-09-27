@@ -126,11 +126,16 @@ Culture folders, PDBs, XML docs, Windows and macOS binaries, and the extra Linux
 
 ## Run
 
-Requires PowerShell 7.2+. From the repository root:
+Requires PowerShell 7.2+ and network access to NuGet. From the repository root:
 
 ```powershell
 pwsh ./.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1
+pwsh ./.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1 -WaitOnExit
 ```
+
+`-WaitOnExit` waits for Enter after success or failure so a double-clicked window stays open. Omit it in a terminal or CI run.
+
+[`Image-Build-All.ps1`](../Image-Build-All.ps1) and [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](../Image-TestBuild-DotNet-Tools-TestApp.ps1) invoke this script before any image build. They do not pass `-WaitOnExit`. A per-distro script run on its own still expects `dockerfiles/.dotnet-tools` to already exist.
 
 The script writes:
 

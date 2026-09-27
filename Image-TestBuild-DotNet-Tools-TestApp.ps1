@@ -2,8 +2,9 @@
 #Requires -Version 7.2
 <#
 .SYNOPSIS
-    Builds the three diagnostics-tools Docker images, then the linux-x64 test
-    app, its three images, and starts those containers detached.
+    Publishes the diagnostic NuGet tools, builds the three diagnostics-tools
+    Docker images, then the linux-x64 test app, its three images, and starts
+    those containers detached.
 
 .DESCRIPTION
     Top-down flow when this script runs:
@@ -13,14 +14,16 @@
         2. Dot-source Write-ImageBuildError and Write-ImageBuildSuccess from
            .ps\ImageBuild\Core so failure and success paths mirror the
            per-distro scripts.
-        3. Validate that the three per-distro scripts and the test-app
-           build script exist.
+        3. Validate that DotNet-Tools.ps1, the three per-distro scripts, and
+           the test-app build script exist.
         4. Write tests\.build\.DotNet-Tools-Commands.txt (created before
            any docker build).
-        5. Invoke Image-Build-Alpine.ps1          -ToolsOnly.
-        6. Invoke Image-Build-Ubuntu.ps1          -ToolsOnly.
-        7. Invoke Image-Build-Ubuntu-Chiseled.ps1 -ToolsOnly.
-        8. Invoke .ps\TestApp\Build-DotNet-Tools-TestApp.ps1, which:
+        5. Invoke .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1, which writes
+           dockerfiles\.build and dockerfiles\.dotnet-tools.
+        6. Invoke Image-Build-Alpine.ps1          -ToolsOnly.
+        7. Invoke Image-Build-Ubuntu.ps1          -ToolsOnly.
+        8. Invoke Image-Build-Ubuntu-Chiseled.ps1 -ToolsOnly.
+        9. Invoke .ps\TestApp\Build-DotNet-Tools-TestApp.ps1, which:
              - restores/builds DotNet-Tools-TestApp for linux-x64
              - copies artifacts to tests\.build
              - builds the three test-app images
@@ -73,14 +76,17 @@
     success; exit code 1 if any sub-script fails.
 
 .NOTES
-    Requires PowerShell 7.2+, a working Docker installation with buildx, and
-    the .NET SDK. The tools images require the dockerfiles/.dotnet-tools
-    folder produced by .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1.
+    Requires PowerShell 7.2+, a working Docker installation with buildx, the
+    .NET SDK, and network access to NuGet. This script runs
+    .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1, which downloads the
+    diagnostic packages into dockerfiles\.build and publishes the merged
+    Linux tree to dockerfiles\.dotnet-tools before the image builds.
 
 .EXAMPLE
     PS> .\Image-TestBuild-DotNet-Tools-TestApp.ps1
-    Builds the three diagnostics-tools images, the Debug linux-x64 test app,
-    the three test-app images, and starts those containers detached.
+    Publishes dockerfiles\.build and dockerfiles\.dotnet-tools, builds the
+    three diagnostics-tools images, the Debug linux-x64 test app, the three
+    test-app images, and starts those containers detached.
 
 .EXAMPLE
     PS> .\Image-TestBuild-DotNet-Tools-TestApp.ps1 -NoCache:$false
@@ -140,7 +146,13 @@ try {
         'Image-Build-Ubuntu-Chiseled.ps1'
     )
 
+    $toolsScriptRelativePath = '.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1'
     $testAppScriptRelativePath = '.ps\TestApp\Build-DotNet-Tools-TestApp.ps1'
+
+    $toolsScriptPath = Join-Path $repositoryRoot $toolsScriptRelativePath
+    if (-not (Test-Path -LiteralPath $toolsScriptPath -PathType Leaf)) {
+        throw "Required diagnostics-tools script was not found: '$toolsScriptPath'."
+    }
 
     foreach ($relativePath in $distroScripts) {
         $scriptPath = Join-Path $repositoryRoot $relativePath
@@ -195,6 +207,16 @@ try {
     )
     Set-Content -LiteralPath $commandsFilePath -Value $commandLines -Encoding utf8
     Write-Host "Done writing $commandsFilePath" -ForegroundColor Green
+
+    Write-Host ""
+    Write-Host "=============================================================" -ForegroundColor Cyan
+    Write-Host "  Invoking $toolsScriptRelativePath" -ForegroundColor Cyan
+    Write-Host "=============================================================" -ForegroundColor Cyan
+
+    & $toolsScriptPath
+    if ($LASTEXITCODE) {
+        throw "$toolsScriptRelativePath failed with exit code $LASTEXITCODE."
+    }
 
     foreach ($relativePath in $distroScripts) {
         $scriptPath = Join-Path $repositoryRoot $relativePath

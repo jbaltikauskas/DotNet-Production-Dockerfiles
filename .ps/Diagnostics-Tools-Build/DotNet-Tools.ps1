@@ -20,23 +20,39 @@
        12. Create dockerfiles\.dotnet-tools, or clear it when it already exists.
        13. Copy dockerfiles\.build\dotnet-tools into dockerfiles\.dotnet-tools.
 
+    Image-Build-All.ps1 and Image-TestBuild-DotNet-Tools-TestApp.ps1 invoke
+    this script before any image build. They do not pass -WaitOnExit.
+
+.PARAMETER WaitOnExit
+    When set, waits for Enter after success or failure so a double-clicked
+    console window stays open. Omit it in a terminal or CI run. Defaults to off.
+
 .INPUTS
     None. Package ids are fixed in this script.
 
 .OUTPUTS
-    Host messages and files under dockerfiles\.build. Exit code 0 on success.
+    Host messages, files under dockerfiles\.build, and the merged tree in
+    dockerfiles\.dotnet-tools. Exit code 0 on success; exit code 1 on failure.
 
 .NOTES
-    Requires PowerShell 7.2+.
+    Requires PowerShell 7.2+ and network access to NuGet.
 
 .EXAMPLE
     PS> .\.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1
+    Downloads the diagnostic packages and publishes dockerfiles\.dotnet-tools.
+
+.EXAMPLE
+    PS> .\.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1 -WaitOnExit
+    Publishes the tools folders and waits for Enter before the window closes.
 #>
 
 #Requires -Version 7.2
 
 [CmdletBinding()]
-Param ()
+Param (
+    [Parameter(Mandatory = $false)]
+    [switch]$WaitOnExit
+)
 
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
@@ -206,10 +222,19 @@ catch {
     Write-Error "Exception Message: $($_.Exception.Message)" -ErrorAction Continue
     Write-Host ""
     Write-Host "Script failed to execute." -ForegroundColor Red
-    Read-Host "Press Enter to close the window ..."
+
+    if ($WaitOnExit) {
+        Read-Host "Press Enter to close the window ..."
+    }
+
     EXIT 1
 }
 
 Write-Host ""
 Write-Host "Script executed successfully." -ForegroundColor Green
-Read-Host "Press Enter to close the window ..."
+
+if ($WaitOnExit) {
+    Read-Host "Press Enter to close the window ..."
+}
+
+EXIT 0

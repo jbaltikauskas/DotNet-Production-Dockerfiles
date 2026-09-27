@@ -2,10 +2,11 @@
 
 [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](../Image-TestBuild-DotNet-Tools-TestApp.ps1) is the orchestrator for the diagnostics-tools test flow. For `-DotNetVersion 10` (the default) it:
 
-1. Builds the three Contoso diagnostics-tools base images.
-2. Builds [`DotNet-Tools-TestApp`](../tests/DotNet-Tools-TestApp/README.md) for `linux-x64`.
-3. Layers that publish output onto each tools base as three runnable test-app images.
-4. Starts those three containers **detached**.
+1. Downloads the diagnostic NuGet packages into `dockerfiles/.build` and publishes the merged tree to `dockerfiles/.dotnet-tools`.
+2. Builds the three Contoso diagnostics-tools base images.
+3. Builds [`DotNet-Tools-TestApp`](../tests/DotNet-Tools-TestApp/README.md) for `linux-x64`.
+4. Layers that publish output onto each tools base as three runnable test-app images.
+5. Starts those three containers **detached**.
 
 The script owns the order of that flow. Later steps (attach `dotnet-trace` / `dotnet-gcdump` / `dotnet-debug` to a running container) will be added after the steps below. A failure in any step stops the run.
 
@@ -21,23 +22,27 @@ Top-down flow:
 
 1. Resolve the repository root (the folder that contains this script), then the `tests` folder under it.
 2. Load `Write-ImageBuildError` and `Write-ImageBuildSuccess` from [`.ps/ImageBuild/Core/`](../.ps/ImageBuild/Core/) so a failed or successful run prints the same banners as the image-build scripts.
-3. Confirm the three per-distro scripts and the test-app build script exist. A missing file throws before any build starts.
+3. Confirm `DotNet-Tools.ps1`, the three per-distro scripts, and the test-app build script exist. A missing file throws before any build starts.
 4. Write [`tests/.build/.DotNet-Tools-Commands.txt`](../tests/.build/.DotNet-Tools-Commands.txt) before any `docker build`. The file lists the in-container `dotnet-trace`, `dotnet-gcdump`, `dotnet-counters`, and `dotnet-debug` commands (PID 1, output under `./app-data`). The same commands are in the [root README](../README.md#copy-paste-commands).
-5. Build the Alpine diagnostics-tools image.
-6. Build the Ubuntu diagnostics-tools image.
-7. Build the Ubuntu Chiseled diagnostics-tools image.
-8. Invoke [`.ps/TestApp/Build-DotNet-Tools-TestApp.ps1`](../.ps/TestApp/Build-DotNet-Tools-TestApp.ps1), which:
+5. Run [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](../.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1). It writes `dockerfiles/.build` and `dockerfiles/.dotnet-tools`.
+6. Build the Alpine diagnostics-tools image.
+7. Build the Ubuntu diagnostics-tools image.
+8. Build the Ubuntu Chiseled diagnostics-tools image.
+9. Invoke [`.ps/TestApp/Build-DotNet-Tools-TestApp.ps1`](../.ps/TestApp/Build-DotNet-Tools-TestApp.ps1), which:
    - restores and builds the test app for `linux-x64`
    - copies artifacts to `tests\.build`
    - builds the three test-app images
    - starts each container with `docker run -d`
 
-Step 4 writes the commands file into `tests\.build` (the folder is created when it is missing). Steps 5–7 invoke the per-distro entry scripts with `-ToolsOnly` and forward `-DotNetVersion` and `-NoCache`. Step 8 forwards `-BuildConfiguration`, `-DotNetVersion`, and `-NoCache`. The artifact copy in step 8 leaves `.gitignore`, `.dockerignore`, and `.DotNet-Tools-Commands.txt` in place.
+Step 4 writes the commands file into `tests\.build` (the folder is created when it is missing). Step 5 publishes the diagnostic NuGet tools. Steps 6–8 invoke the per-distro entry scripts with `-ToolsOnly` and forward `-DotNetVersion` and `-NoCache`. Step 9 forwards `-BuildConfiguration`, `-DotNetVersion`, and `-NoCache`. The artifact copy in step 9 leaves `.gitignore`, `.dockerignore`, and `.DotNet-Tools-Commands.txt` in place.
 
 ```text
 Image-TestBuild-DotNet-Tools-TestApp.ps1
     │
     ├─ tests\.build\.DotNet-Tools-Commands.txt
+    ├─ .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1
+    │      ├─ dockerfiles\.build
+    │      └─ dockerfiles\.dotnet-tools
     ├─ Image-Build-Alpine.ps1            -ToolsOnly -DotNetVersion 10
     ├─ Image-Build-Ubuntu.ps1            -ToolsOnly -DotNetVersion 10
     ├─ Image-Build-Ubuntu-Chiseled.ps1   -ToolsOnly -DotNetVersion 10
@@ -105,7 +110,9 @@ docker run --rm contoso/alpine-net-dotnet-tools-testapp-10:latest --iterations 5
 
 ## Step 1 — diagnostics-tools images
 
-The three scripts live at the repository root. With `-ToolsOnly` each one builds the Dockerfile stage named `final`. That stage copies `dockerfiles/.dotnet-tools` into the image and puts it on `PATH` under `/app/dotnet-tools`. The folder is produced first by [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](../.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) (`dotnet-debug`, `dotnet-gcdump`, `dotnet-trace`, merged for Linux x64).
+Before the image builds, the orchestrator runs [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](../.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1). That script downloads `dotnet-counters`, `dotnet-debug`, `dotnet-gcdump`, and `dotnet-trace` into `dockerfiles/.build` and publishes the merged Linux x64 tree to `dockerfiles/.dotnet-tools`.
+
+The three per-distro scripts live at the repository root. With `-ToolsOnly` each one builds the Dockerfile stage named `final`. That stage copies `dockerfiles/.dotnet-tools` into the image and puts it on `PATH` under `/app/dotnet-tools`.
 
 | Order | Script | Image |
 | --- | --- | --- |
@@ -113,7 +120,7 @@ The three scripts live at the repository root. With `-ToolsOnly` each one builds
 | 2 | [`Image-Build-Ubuntu.ps1`](../Image-Build-Ubuntu.ps1) | `contoso/ubuntu-net-dotnet-tools-10:latest` |
 | 3 | [`Image-Build-Ubuntu-Chiseled.ps1`](../Image-Build-Ubuntu-Chiseled.ps1) | `contoso/ubuntu-chiseled-net-dotnet-tools-10:latest` |
 
-Alpine is the primary base, Ubuntu Noble is the secondary base, and Ubuntu Chiseled is the last-resort distroless image. The same order is used by [`Image-Build-All.ps1`](../Image-Build-All.ps1).
+Alpine is the primary base, Ubuntu Noble is the secondary base, and Ubuntu Chiseled is the last-resort distroless image. [`Image-Build-All.ps1`](../Image-Build-All.ps1) uses the same order after it runs `DotNet-Tools.ps1`.
 
 `-DotNetVersion` defaults to `10`. It selects `dockerfiles/<distro>/10` and the `10` segment of each tag. The same value is forwarded to every per-distro script and to the test-app script.
 
@@ -227,7 +234,7 @@ Rebuild the test app, its three images, and restart the detached containers **wi
 - PowerShell 7.2 or later (`pwsh`).
 - Docker Engine with BuildKit (`docker buildx` on `PATH`) for the image and container steps.
 - The .NET 10 SDK (`dotnet` on `PATH`) for the test-app compile step.
-- `dockerfiles/.dotnet-tools` already populated. Refresh it with [`.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1`](../.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) before the first tools-image build, and again after a diagnostics-tool servicing bump. See the [diagnostic tools build](diagnostic-tools-build.md).
+- Network access to NuGet. The orchestrator runs [`.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1`](../.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) before the image builds. That script writes `dockerfiles/.build` and `dockerfiles/.dotnet-tools`. See the [diagnostic tools build](diagnostic-tools-build.md).
 
 ## When a step fails
 
@@ -235,4 +242,4 @@ Rebuild the test app, its three images, and restart the detached containers **wi
 
 ## Later steps
 
-This script is the list of test steps, in order. The three steps above (tools images, .NET build, test-app images + detached containers) are the whole list today. The next steps — attach the diagnostic CLIs to a running detached container — will be added after the detached runs, in this same file, with the same rule: one failed step ends the run.
+This script is the list of test steps, in order. The steps above (diagnostic NuGet tools, tools images, .NET build, test-app images + detached containers) are the whole list today. The next steps — attach the diagnostic CLIs to a running detached container — will be added after the detached runs, in this same file, with the same rule: one failed step ends the run.
