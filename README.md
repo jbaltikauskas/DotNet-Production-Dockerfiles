@@ -602,15 +602,26 @@ The repository ships PowerShell 7.2+ scripts that wrap `docker buildx build` wit
 
 `Image-Build-All.ps1` first runs [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1), which downloads the diagnostic NuGet packages into `dockerfiles/.build` and publishes the merged Linux tree to `dockerfiles/.dotnet-tools`. It then invokes `Image-Build-Alpine.ps1`, `Image-Build-Ubuntu.ps1`, and `Image-Build-Ubuntu-Chiseled.ps1` in that order, forwarding `-NoCache`. It builds no images itself and stops immediately if the tools script or any per-distro script fails. Use a per-distro script directly when you need to build a single distro. That script publishes `dockerfiles/.dotnet-tools` when the folder is missing or empty, and reuses it when it already exists.
 
-Reusable helper functions live under [`.ps/ImageBuild/Core/`](.ps/ImageBuild/Core/) (one function per file). The three per-distro entry scripts dot-source the build helpers and the exit helpers (`Write-ImageBuildError`, `Write-ImageBuildSuccess`). `Image-Build-All.ps1` does not touch these — the per-distro scripts it calls load them:
+Reusable helper functions live under [`.ps/Core/`](.ps/Core/) (generic helpers shared by every script) and [`.ps/ImageBuild/Core/`](.ps/ImageBuild/Core/) (image-build-specific helpers), one function per file. The three per-distro entry scripts dot-source the exit banners (`Write-ScriptError`, `Write-ScriptSuccess`) and the other generic helpers from `.ps/Core/`, then the image-build helpers from `.ps/ImageBuild/Core/`. `Image-Build-All.ps1` does not touch these — the per-distro scripts it calls load them:
 
-- [`Assert-ImageBuildDockerCli.ps1`](.ps/ImageBuild/Core/Assert-ImageBuildDockerCli.ps1)
+Generic helpers ([`.ps/Core/`](.ps/Core/)):
+
+- [`Write-ScriptError.ps1`](.ps/Core/Write-ScriptError.ps1)
+- [`Write-ScriptSuccess.ps1`](.ps/Core/Write-ScriptSuccess.ps1)
+- [`Assert-Cli.ps1`](.ps/Core/Assert-Cli.ps1)
+- [`Assert-LastExitCode.ps1`](.ps/Core/Assert-LastExitCode.ps1)
+- [`Write-Section.ps1`](.ps/Core/Write-Section.ps1)
+
+Image-build helpers ([`.ps/ImageBuild/Core/`](.ps/ImageBuild/Core/)):
+
 - [`Invoke-DockerImageBuild.ps1`](.ps/ImageBuild/Core/Invoke-DockerImageBuild.ps1)
 - [`Invoke-ImageBuildBatch.ps1`](.ps/ImageBuild/Core/Invoke-ImageBuildBatch.ps1)
+- [`Invoke-ImageBuildScript.ps1`](.ps/ImageBuild/Core/Invoke-ImageBuildScript.ps1)
+- [`Invoke-ImageBuildForDistro.ps1`](.ps/ImageBuild/Core/Invoke-ImageBuildForDistro.ps1)
+- [`Get-ImageBuildDefinitions.ps1`](.ps/ImageBuild/Core/Get-ImageBuildDefinitions.ps1)
+- [`Initialize-ImageBuildToolsContext.ps1`](.ps/ImageBuild/Core/Initialize-ImageBuildToolsContext.ps1)
 - [`Write-ImageBuildSettings.ps1`](.ps/ImageBuild/Core/Write-ImageBuildSettings.ps1)
 - [`Write-ImageBuildSummary.ps1`](.ps/ImageBuild/Core/Write-ImageBuildSummary.ps1)
-- [`Write-ImageBuildError.ps1`](.ps/ImageBuild/Core/Write-ImageBuildError.ps1)
-- [`Write-ImageBuildSuccess.ps1`](.ps/ImageBuild/Core/Write-ImageBuildSuccess.ps1)
 
 ### Prerequisites
 

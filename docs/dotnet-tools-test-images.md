@@ -21,20 +21,21 @@ Run from the repository root:
 Top-down flow:
 
 1. Resolve the repository root (the folder that contains this script), then the `tests` folder under it.
-2. Load `Write-ImageBuildError` and `Write-ImageBuildSuccess` from [`.ps/ImageBuild/Core/`](../.ps/ImageBuild/Core/) so a failed or successful run prints the same banners as the image-build scripts.
+2. Load `Write-ScriptError` and `Write-ScriptSuccess` from [`.ps/Core/`](../.ps/Core/) so a failed or successful run prints the same banners as the image-build scripts.
 3. Confirm `DotNet-Tools.ps1`, the three per-distro scripts, and the test-app build script exist. A missing file throws before any build starts.
 4. Write [`tests/.build/.DotNet-Tools-Commands.txt`](../tests/.build/.DotNet-Tools-Commands.txt) before any `docker build`. The file lists the in-container `dotnet-trace`, `dotnet-gcdump`, `dotnet-counters`, and `dotnet-debug` commands (PID 1, output under `./app-data`). The same commands are in the [root README](../README.md#copy-paste-commands).
 5. Run [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](../.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1). It writes `dockerfiles/.build` and `dockerfiles/.dotnet-tools`.
 6. Build the Alpine diagnostics-tools image.
 7. Build the Ubuntu diagnostics-tools image.
 8. Build the Ubuntu Chiseled diagnostics-tools image.
-9. Invoke [`.ps/TestApp/Build-DotNet-Tools-TestApp.ps1`](../.ps/TestApp/Build-DotNet-Tools-TestApp.ps1), which:
+9. Run [`.ps/Core/Export-DotNetArtifactReport.ps1`](../.ps/Core/Export-DotNetArtifactReport.ps1) to scan `dockerfiles/.dotnet-tools` and write [`tests/.build/dotnet-assembly-report.md`](../tests/.build/). This runs before the test-app build so the report is part of the `tests/.build` docker context and lands at `/app/dotnet-assembly-report.md` in each test-app image.
+10. Invoke [`.ps/TestApp/Build-DotNet-Tools-TestApp.ps1`](../.ps/TestApp/Build-DotNet-Tools-TestApp.ps1), which:
    - restores and builds the test app for `linux-x64`
-   - copies artifacts to `tests\.build`
+   - copies artifacts to `tests\.build` (keeping the report written above)
    - builds the three test-app images
    - starts each container with `docker run -d`
 
-Step 4 writes the commands file into `tests\.build` (the folder is created when it is missing). Step 5 publishes the diagnostic NuGet tools. Steps 6–8 invoke the per-distro entry scripts with `-ToolsOnly` and forward `-DotNetVersion` and `-NoCache`. Step 9 forwards `-BuildConfiguration`, `-DotNetVersion`, and `-NoCache`. The artifact copy in step 9 leaves `.gitignore`, `.dockerignore`, and `.DotNet-Tools-Commands.txt` in place.
+Step 4 writes the commands file into `tests\.build` (the folder is created when it is missing). Step 5 publishes the diagnostic NuGet tools. Steps 6–8 invoke the per-distro entry scripts with `-ToolsOnly` and forward `-DotNetVersion` and `-NoCache`. Step 9 writes the assembly report into `tests\.build` from `dockerfiles/.dotnet-tools`. Step 10 forwards `-BuildConfiguration`, `-DotNetVersion`, and `-NoCache`. The artifact copy in step 10 leaves `.gitignore`, `.dockerignore`, `.DotNet-Tools-Commands.txt`, and `dotnet-assembly-report.md` in place.
 
 ```text
 Image-TestBuild-DotNet-Tools-TestApp.ps1
@@ -46,6 +47,8 @@ Image-TestBuild-DotNet-Tools-TestApp.ps1
     ├─ Image-Build-Alpine.ps1            -ToolsOnly -DotNetVersion 10
     ├─ Image-Build-Ubuntu.ps1            -ToolsOnly -DotNetVersion 10
     ├─ Image-Build-Ubuntu-Chiseled.ps1   -ToolsOnly -DotNetVersion 10
+    ├─ .ps\Core\Export-DotNetArtifactReport.ps1
+    │      └─ tests\.build\dotnet-assembly-report.md
     │
     └─ .ps\TestApp\Build-DotNet-Tools-TestApp.ps1
            ├─ dotnet restore/build + copy to tests\.build
@@ -138,7 +141,7 @@ That script first:
 2. Checks that `dotnet` is on `PATH`.
 3. Finds the first `*.slnx` under [`tests/DotNet-Tools-TestApp`](../tests/DotNet-Tools-TestApp/). Today that file is `DotNet-Tools-TestApp.slnx`.
 4. Restores and rebuilds the solution for `linux-x64` only, platform `x64`, with `/p:EnableLocalDevelopment=true`.
-5. Copies the build output into [`tests/.build`](../tests/.build/), leaving `.gitignore`, `.dockerignore`, and `.DotNet-Tools-Commands.txt` in place and replacing everything else.
+5. Copies the build output into [`tests/.build`](../tests/.build/), leaving `.gitignore`, `.dockerignore`, `.DotNet-Tools-Commands.txt`, and `dotnet-assembly-report.md` in place and replacing everything else.
 
 The app targets `net10.0` and is x64-only. Portable PDBs stay in the output so `dotnet-trace` and `dotnet-debug` can show useful stacks. What the process does at runtime is described in the [test app README](../tests/DotNet-Tools-TestApp/README.md).
 
@@ -168,6 +171,7 @@ Typical contents of `tests/.build/` used as the Docker build context:
 | `.dockerignore` | Excludes `.gitignore` from the image |
 | `.gitignore` | Kept on disk; not copied into `/app` |
 | `.DotNet-Tools-Commands.txt` | In-container diagnostic commands; written before `docker build` and kept across the artifact copy |
+| `dotnet-assembly-report.md` | Assembly report for `dockerfiles/.dotnet-tools`; written before `docker build`, kept across the artifact copy, and copied to `/app/dotnet-assembly-report.md` |
 
 ## Step 3 — test-app images and detached containers
 
@@ -238,7 +242,7 @@ Rebuild the test app, its three images, and restart the detached containers **wi
 
 ## When a step fails
 
-`$ErrorActionPreference` is `Stop`. The first missing script, failed image build, failed `dotnet` build, or failed `docker run` is caught, printed by `Write-ImageBuildError` (exception type, exception message, red failure line), and the process exits with code 1. Steps after the failure do not run. A clean run ends with the green line from `Write-ImageBuildSuccess`.
+`$ErrorActionPreference` is `Stop`. The first missing script, failed image build, failed `dotnet` build, or failed `docker run` is caught, printed by `Write-ScriptError` (exception type, exception message, red failure line), and the process exits with code 1. Steps after the failure do not run. A clean run ends with the green line from `Write-ScriptSuccess`.
 
 ## Later steps
 
