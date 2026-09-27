@@ -14,7 +14,7 @@
       4. Set build property EnableLocalDevelopment=true
       5. Run dotnet restore against the solution for linux-x64 only
       6. Run dotnet build for linux-x64 in selected configuration / x64 / minimal verbosity
-      7. Copy linux-x64 artifacts to tests\.build (keeps .gitignore, .dockerignore, and .DotNet-Tools-Commands.txt)
+      7. Copy linux-x64 artifacts to tests\.build (keeps .gitignore, .dockerignore, .DotNet-Tools-Commands.txt, and dotnet-assembly-report.md)
       8. Build the three test-app images (alpine / ubuntu / ubuntu-chiseled)
       9. Run each test-app container detached (replaces any prior container of the same name)
      10. Report total elapsed build time
@@ -364,10 +364,10 @@ function Copy-BuildArtifacts {
             New-Item -Path $destinationDirectory -ItemType Directory -Force | Out-Null
         }
 
-        Write-Host "Clearing destination (keeping .gitignore, .dockerignore, and .DotNet-Tools-Commands.txt):"
+        Write-Host "Clearing destination (keeping .gitignore, .dockerignore, .DotNet-Tools-Commands.txt, and dotnet-assembly-report.md):"
         Write-Host "    $destinationDirectory" -ForegroundColor "Yellow"
         Get-ChildItem -LiteralPath $destinationDirectory -Force |
-            Where-Object { $_.Name -notin @('.gitignore', '.dockerignore', '.DotNet-Tools-Commands.txt') } |
+            Where-Object { $_.Name -notin @('.gitignore', '.dockerignore', '.DotNet-Tools-Commands.txt', 'dotnet-assembly-report.md') } |
             Remove-Item -Recurse -Force
 
         Copy-Item -Path (Join-Path $sourceDirectory "*") -Destination $destinationDirectory -Recurse -Force

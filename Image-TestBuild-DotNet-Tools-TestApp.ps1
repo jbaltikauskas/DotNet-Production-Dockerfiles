@@ -23,14 +23,16 @@
         6. Invoke Image-Build-Alpine.ps1          -ToolsOnly.
         7. Invoke Image-Build-Ubuntu.ps1          -ToolsOnly.
         8. Invoke Image-Build-Ubuntu-Chiseled.ps1 -ToolsOnly.
-        9. Invoke .ps\TestApp\Build-DotNet-Tools-TestApp.ps1, which:
+        9. Invoke .ps\Core\Export-DotNetArtifactReport.ps1 to scan
+           dockerfiles\.dotnet-tools and write the assembly report straight to
+           tests\.build\dotnet-assembly-report.md. This runs before the test-app
+           build so the report is part of the docker context and lands at
+           /app/dotnet-assembly-report.md in each test-app image.
+       10. Invoke .ps\TestApp\Build-DotNet-Tools-TestApp.ps1, which:
              - restores/builds DotNet-Tools-TestApp for linux-x64
-             - copies artifacts to tests\.build
+             - copies artifacts to tests\.build (keeping the report written above)
              - builds the three test-app images
              - starts each container detached
-       10. Invoke .ps\Core\Export-DotNetArtifactReport.ps1 to scan
-           dockerfiles\.dotnet-tools and write the assembly report straight to
-           tests\.build\dotnet-assembly-report.md.
 
     Each per-distro script builds only its diagnostics-tools image tagged
     :latest (target: final). The lean aspnet-base and runtime-base images
@@ -211,17 +213,22 @@ try {
             -BannerSuffix "-ToolsOnly -DotNetVersion $DotNetVersion"
     }
 
-    Invoke-ImageBuildScript `
-        -RepositoryRoot $repositoryRoot `
-        -RelativePath $testAppScriptRelativePath `
-        -Arguments @{ buildConfiguration = $BuildConfiguration; DotNetVersion = $DotNetVersion; NoCache = $NoCache } `
-        -BannerSuffix "(build app, images, run detached)"
-
+    # Generate the assembly report into tests\.build BEFORE the test-app build so
+    # Build-TestAppDockerImages picks it up as part of the docker context and it
+    # lands at /app/dotnet-assembly-report.md. Copy-BuildArtifacts keeps this file
+    # when it clears tests\.build. Written after DotNet-Tools.ps1 has populated
+    # dockerfiles\.dotnet-tools (the scan source), which the distro builds do not change.
     Invoke-ImageBuildScript `
         -RepositoryRoot $repositoryRoot `
         -RelativePath $reportScriptRelativePath `
         -Arguments @{ ToolsDirectory = $dotnetToolsDirectory; OutputPath = $assemblyReportPath } `
         -BannerSuffix "-ToolsDirectory $dotnetToolsDirectory -OutputPath $assemblyReportPath"
+
+    Invoke-ImageBuildScript `
+        -RepositoryRoot $repositoryRoot `
+        -RelativePath $testAppScriptRelativePath `
+        -Arguments @{ buildConfiguration = $BuildConfiguration; DotNetVersion = $DotNetVersion; NoCache = $NoCache } `
+        -BannerSuffix "(build app, images, run detached)"
 }
 catch {
 
