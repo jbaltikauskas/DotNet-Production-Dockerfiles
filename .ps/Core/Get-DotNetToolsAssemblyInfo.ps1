@@ -9,7 +9,7 @@ function Get-DotNetToolsAssemblyInfo () {
         .NET metadata or is not an assembly (for example native libraries).
         Throws when the file is not a PE image, or when a PE image with
         metadata cannot be read.
-    .REMARKS
+    .NOTE
         1. Open a PEReader and return IsManaged = $false when there is no metadata.
         2. Return IsManaged = $false when the image is not an assembly.
         3. Read the assembly definition, the strong-name flag, and referenced assembly names.
@@ -97,7 +97,7 @@ function Get-DotNetToolsAssemblyAttributes () {
         are returned as an ordered dictionary under the 'Metadata' key.
         Attribute blobs are decoded directly: every mapped attribute has a
         single string constructor argument, and AssemblyMetadata has two.
-    .REMARKS
+    .NOTE
         1. Walk the assembly definition custom attributes.
         2. Resolve each attribute type name; skip names that are not mapped.
         3. Skip blobs without the 0x0001 prolog.
@@ -170,7 +170,7 @@ function Get-DotNetToolsAttributeTypeName () {
         Resolves the attribute constructor to its declaring type. Handles
         constructors defined in another assembly (MemberReference) and in the
         same assembly (MethodDefinition). Returns $null for other shapes.
-    .REMARKS
+    .NOTE
         1. For MemberReference constructors, return the parent TypeReference name.
         2. For MethodDefinition constructors, return the declaring TypeDefinition name.
         3. Otherwise return $null.
@@ -222,7 +222,7 @@ function ConvertTo-DotNetToolsTfm () {
         Maps '.NETCoreApp,Version=v8.0' to 'net8.0', '.NETStandard,Version=v2.0'
         to 'netstandard2.0', and '.NETFramework,Version=v4.6.2' to 'net462'.
         Returns the input unchanged when it does not match, and $null for empty input.
-    .REMARKS
+    .NOTE
         1. Return $null for empty input.
         2. Match the identifier and version, then build the short name.
     #>

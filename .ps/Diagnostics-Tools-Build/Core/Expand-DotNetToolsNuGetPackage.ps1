@@ -5,7 +5,7 @@ function Expand-DotNetToolsNuGetPackage () {
     .DESCRIPTION
         A .nupkg is a zip archive. Each package is extracted to Build\<package-id>
         so package contents do not overwrite each other.
-    .REMARKS
+    .NOTE
         1. Replace an existing extract folder.
         2. Extract the archive.
         3. Return the extract folder.

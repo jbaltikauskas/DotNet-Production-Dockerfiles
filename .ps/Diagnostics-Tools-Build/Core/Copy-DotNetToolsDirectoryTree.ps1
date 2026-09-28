@@ -5,7 +5,7 @@ function Copy-DotNetToolsDirectoryTree () {
     .DESCRIPTION
         Recreates the source tree under DestinationDirectory. Files already
         present at the destination are overwritten.
-    .REMARKS
+    .NOTE
         1. Require SourceDirectory.
         2. Copy each file, creating parent folders as needed.
         3. Return the number of files copied.

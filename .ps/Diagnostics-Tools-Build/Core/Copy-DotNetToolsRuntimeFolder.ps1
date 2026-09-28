@@ -7,7 +7,7 @@ function Copy-DotNetToolsRuntimeFolder () {
         assemblies. When the folder exists, copies it into the shared
         dotnet-tools folder and overwrites existing files. Returns false when
         the folder is absent.
-    .REMARKS
+    .NOTE
         1. Resolve tools\net8.0\any\FolderName.
         2. Return false when the folder is absent.
         3. Copy files into ToolDirectory\FolderName, overwriting existing files.

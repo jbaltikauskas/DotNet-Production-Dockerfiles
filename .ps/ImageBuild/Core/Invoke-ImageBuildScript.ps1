@@ -7,7 +7,7 @@ function Invoke-ImageBuildScript () {
         prints a section banner, runs it with the supplied arguments, and throws
         when $LASTEXITCODE is non-zero. Used to chain the diagnostics-tools
         script, the per-distro scripts, and the test-app script.
-    .REMARKS
+    .NOTE
         1. Resolve the script path and throw when it is missing.
         2. Print the section banner (RelativePath plus any argument summary).
         3. Invoke the script, splatting Arguments.

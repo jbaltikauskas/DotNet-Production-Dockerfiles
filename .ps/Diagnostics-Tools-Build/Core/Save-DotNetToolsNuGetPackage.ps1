@@ -5,7 +5,7 @@ function Save-DotNetToolsNuGetPackage () {
     .DESCRIPTION
         Saves the .nupkg from the NuGet flat container and removes older
         archives for the same package id.
-    .REMARKS
+    .NOTE
         1. Download the .nupkg.
         2. Remove older archives for the same package id.
         3. Return the archive path.

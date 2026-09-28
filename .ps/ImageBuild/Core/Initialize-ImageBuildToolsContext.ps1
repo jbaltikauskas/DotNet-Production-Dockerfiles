@@ -7,7 +7,7 @@ function Initialize-ImageBuildToolsContext () {
         dockerfiles\.dotnet-tools folder must exist and be non-empty. When it is
         already populated it is reused; otherwise DotNet-Tools.ps1 is invoked to
         publish it. Does nothing when no build in the list includes the tools.
-    .REMARKS
+    .NOTE
         1. Return early when no build in ImageBuilds includes the tools.
         2. Reuse the folder when it exists and contains files.
         3. Otherwise invoke DotNet-Tools.ps1 with Invoke-ImageBuildScript.

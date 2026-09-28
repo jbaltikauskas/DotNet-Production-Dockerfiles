@@ -11,7 +11,7 @@ function Export-DotNetToolsAssemblyReport () {
         Requires Get-DotNetToolsAssemblyInfo.ps1, Get-DotNetToolsFileInfo.ps1,
         New-DotNetToolsMarkdownTable.ps1, and
         ConvertTo-DotNetToolsMarkdownReport.ps1 to be dot-sourced first.
-    .REMARKS
+    .NOTE
         1. Require ToolsDirectory to exist.
         2. Enumerate files recursively, skipping OutputPath.
         3. Collect file info; record failures with their message.

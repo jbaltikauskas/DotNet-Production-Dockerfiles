@@ -6,7 +6,7 @@ function Copy-DotNetToolsRuntimeFiles () {
         Copies *.dll and *.json files from tools\net8.0\any into the shared
         dotnet-tools folder. Only files in that folder root are copied.
         Files already in the destination are overwritten.
-    .REMARKS
+    .NOTE
         1. Require the extracted tools\net8.0\any folder.
         2. Select root *.dll and *.json files.
         3. Overwrite files that already exist.

@@ -5,7 +5,7 @@ function Write-Section () {
     .DESCRIPTION
         Writes a blank line, a cyan rule, the message, and a cyan rule. Used to
         mark each phase of a script run in the console output.
-    .REMARKS
+    .NOTE
         1. Print a leading blank line and the top rule.
         2. Print the message and the bottom rule.
     #>

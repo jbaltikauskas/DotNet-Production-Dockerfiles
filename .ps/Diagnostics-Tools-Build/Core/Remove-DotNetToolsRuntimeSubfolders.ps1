@@ -6,7 +6,7 @@ function Remove-DotNetToolsRuntimeSubfolders () {
         Removes child folders of ToolDirectory\runtimes whose names match any
         pattern in SubfolderPatterns, such as win* or browser. Other runtime
         folders are left in place. Returns the names that were deleted.
-    .REMARKS
+    .NOTE
         1. Resolve ToolDirectory\runtimes.
         2. Return no names when the runtimes folder is absent.
         3. Delete each immediate child folder that matches a pattern.

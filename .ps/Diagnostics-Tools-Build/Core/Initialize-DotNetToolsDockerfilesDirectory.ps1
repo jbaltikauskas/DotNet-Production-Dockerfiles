@@ -5,7 +5,7 @@ function Initialize-DotNetToolsDockerfilesDirectory () {
     .DESCRIPTION
         Creates the folder when it is missing. When it already exists, deletes
         every file and subfolder inside it and keeps the folder.
-    .REMARKS
+    .NOTE
         1. Create DestinationDirectory when it is missing.
         2. Delete existing files and subfolders.
         3. Return DestinationDirectory.

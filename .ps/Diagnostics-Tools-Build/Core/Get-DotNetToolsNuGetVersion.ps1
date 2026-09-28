@@ -5,7 +5,7 @@ function Get-DotNetToolsNuGetVersion () {
     .DESCRIPTION
         Reads the NuGet registration index. Unlisted and prerelease versions are
         ignored. An unlisted upload can outrank the real tool build under SemVer.
-    .REMARKS
+    .NOTE
         1. Read the package registration index.
         2. Flatten inline or paged catalog entries.
         3. Keep listed stable versions.

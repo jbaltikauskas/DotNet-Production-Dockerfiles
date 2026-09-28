@@ -7,7 +7,7 @@ function Invoke-DockerImageBuild () {
         docker output. The dotnet-tools build context is added only when
         supplied, so aspnet-base / runtime-base targets do not require the
         tools folder.
-    .REMARKS
+    .NOTE
         1. Validate that the Dockerfile and build context exist.
         2. Compose docker buildx build arguments in the same order used by the
            Copy-and-Paste examples in each Dockerfile.

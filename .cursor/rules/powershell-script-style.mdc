@@ -57,7 +57,7 @@ Rules for the param block:
 
 Every function is an advanced function. Use approved verbs (`Get-`, `Set-`, `New-`, `Read-`, `Write-`, `Invoke-`, `Test-`, `Assert-`, `Resolve-`, `Update-`, `Convert-`, `Start-`, `Stop-`). Pascal case for function names.
 
-### Function comment-based help: `.SYNOPSIS`, `.DESCRIPTION`, and `.REMARKS`
+### Function comment-based help: `.SYNOPSIS`, `.DESCRIPTION`, and `.NOTE`
 
 Place a `<# ... #>` comment block **immediately inside** the function, before `[CmdletBinding()]` and `Param`.
 
@@ -65,11 +65,11 @@ Place a `<# ... #>` comment block **immediately inside** the function, before `[
 
 - **`.SYNOPSIS`** — One sentence: what it does.
 
-- **`.DESCRIPTION`** — Purpose, return or output contract, important branches, errors thrown, and non-obvious side effects. Keep the narrative here; do not duplicate the step list (that is `.REMARKS`). For tiny helpers, a single short paragraph is enough.
+- **`.DESCRIPTION`** — Purpose, return or output contract, important branches, errors thrown, and non-obvious side effects. Keep the narrative here; do not duplicate the step list (that is `.NOTE`). For tiny helpers, a single short paragraph is enough.
 
-- **`.REMARKS`** — Numbered steps in execution order (validate, branch, call, return). Omit trace-only steps — for example the standard **`Begin { $PSBoundParameters | Write-Debug }`**, stray `Write-Host` / `Write-Output`, or dumps — unless emitting that output **is** the function's job ( **`Write-Section`** lists the banner **`Write-Host`** sequence). Straight-line helpers may use only one or two steps.
+- **`.NOTE`** — Numbered steps in execution order (validate, branch, call, return). Omit trace-only steps — for example the standard **`Begin { $PSBoundParameters | Write-Debug }`**, stray `Write-Host` / `Write-Output`, or dumps — unless emitting that output **is** the function's job ( **`Write-Section`** lists the banner **`Write-Host`** sequence). Straight-line helpers may use only one or two steps.
 
-**Secret-handling helpers** must still include all three sections; keep `.DESCRIPTION` and `.REMARKS` minimal (one line each) and do not echo parameters in help text.
+**Secret-handling helpers** must still include all three sections; keep `.DESCRIPTION` and `.NOTE` minimal (one line each) and do not echo parameters in help text.
 
 Function rules:
 
@@ -141,7 +141,7 @@ function Convert-SecureStringToPlain () {
     .DESCRIPTION
         Marshal-based decode; caller must zero sensitive plaintext promptly. Never log the result.
 
-    .REMARKS
+    .NOTE
         1. Return $null when Secret is missing.
         2. Decode via BSTR, return plaintext, zero the BSTR in finally.
     #>
@@ -220,7 +220,7 @@ Match the reference exactly so logs look the same across scripts:
 2. `#Requires -Version`, `$ErrorActionPreference = 'Stop'`, `$PSNativeCommandUseErrorActionPreference = $true` are set.
 3. Every parameter (script and function) has `[Parameter(Mandatory = ..., HelpMessage = '...')]`. `HelpMessage` is mandatory. Add `Validate*` when the type needs it.
 4. Every function is an advanced function (`[CmdletBinding()]` + `Param`). **No `End` blocks.** Functions with ≥1 parameter (non-secret) use **`Begin` + `Write-Debug`** on **`$PSBoundParameters`** then **`Process`**, matching **`Write-LightRagReadme.ps1`**. After **`Process {`**, one empty line before the first inner statement.
-5. Every function has comment-based help with **`.SYNOPSIS`**, **`.DESCRIPTION`**, and **`.REMARKS`** (see **Function comment-based help**). In `.REMARKS`, skip printing-only steps unless that is the function's contract.
+5. Every function has comment-based help with **`.SYNOPSIS`**, **`.DESCRIPTION`**, and **`.NOTE`** (see **Function comment-based help**). In `.NOTE`, skip printing-only steps unless that is the function's contract.
 6. The orchestration lives in one `try { ... }` block. After every **`try {`**, one empty line before the first inner statement (including nested **`try`**).
 7. The catch prints exception type and message, then `Read-Host`, then `EXIT 1`.
 8. After the wrapper, you print "Script executed successfully." in Green and a final `Read-Host`.

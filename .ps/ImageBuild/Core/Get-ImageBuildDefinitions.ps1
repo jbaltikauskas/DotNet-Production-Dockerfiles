@@ -8,7 +8,7 @@ function Get-ImageBuildDefinitions () {
         IncludeTools true). Unless ToolsOnly is set, a second entry is the lean
         base image (target: BaseTarget, IncludeTools false). Dockerfile folder
         and image tags are derived from DistroLabel and DotNetVersion.
-    .REMARKS
+    .NOTE
         1. Derive the version folder, Dockerfile path, and both image tags.
         2. Add the diagnostics-tools (final) build.
         3. Add the lean base build unless ToolsOnly is set.

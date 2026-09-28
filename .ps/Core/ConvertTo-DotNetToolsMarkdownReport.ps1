@@ -6,7 +6,7 @@ function ConvertTo-DotNetToolsMarkdownReport () {
         Returns one markdown string. Sections, in order: header and totals,
         assembly attribute reference, diagnostic tools, managed assembly
         summary, per-assembly details, native and other files, warnings.
-    .REMARKS
+    .NOTE
         1. Split Files into managed and other files, sorted by relative path.
         2. Collect lines from each section builder.
         3. Join the lines with LF and return the text.
@@ -58,7 +58,7 @@ function Get-DotNetToolsReportHeaderSection () {
     .DESCRIPTION
         Includes generation time (UTC), scanned folder, PowerShell and OS
         versions, a file count and size per kind, and unreadable file count.
-    .REMARKS
+    .NOTE
         1. Emit the title and run context list.
         2. Group files by kind and emit the totals table.
     #>
@@ -120,7 +120,7 @@ function Get-DotNetToolsReportReferenceSection () {
     .DESCRIPTION
         Explains the three version attributes and the descriptive attributes,
         and where each one shows up (runtime binding, Windows file properties).
-    .REMARKS
+    .NOTE
         1. Return the fixed markdown lines.
     #>
     [CmdletBinding()]
@@ -159,7 +159,7 @@ function Get-DotNetToolsReportToolSection () {
     .DESCRIPTION
         A tool is a managed assembly with a sibling <name>.runtimeconfig.json.
         Each row shows the tool versions and the shared framework it runs on.
-    .REMARKS
+    .NOTE
         1. Find runtime config files and their matching managed assembly.
         2. Read framework name, version, and rollForward from the config.
         3. Emit the table.
@@ -215,7 +215,7 @@ function Get-DotNetToolsReportAssemblySection () {
     .DESCRIPTION
         Columns: path, AssemblyVersion, FileVersion, InformationalVersion,
         TFM, company, size.
-    .REMARKS
+    .NOTE
         1. Build one row per managed file.
         2. Emit the table.
     #>
@@ -265,7 +265,7 @@ function Get-DotNetToolsReportDetailSection () {
     .DESCRIPTION
         Each block lists every collected attribute and file property as a
         two-column Property / Value table inside <details>.
-    .REMARKS
+    .NOTE
         1. For each managed file, build the property rows.
         2. Append AssemblyMetadata key/value pairs.
         3. Append one row per referenced assembly name.
@@ -349,7 +349,7 @@ function Get-DotNetToolsReportOtherFileSection () {
     .DESCRIPTION
         Columns: path, kind, detail (TFM/runtime target or Win32 version),
         size, short SHA-256.
-    .REMARKS
+    .NOTE
         1. Resolve a per-kind detail value.
         2. Emit one row per file.
     #>
@@ -404,7 +404,7 @@ function Get-DotNetToolsReportWarningSection () {
         Reports unreadable files, assemblies without a file or informational
         version, assemblies whose Authenticode status is not Valid, and
         assembly names present with more than one AssemblyVersion.
-    .REMARKS
+    .NOTE
         1. Collect warnings from each rule.
         2. Emit a bullet list, or '_None._' when empty.
     #>

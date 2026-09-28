@@ -9,7 +9,7 @@ function Invoke-ImageBuildForDistro () {
         the docker CLI, runs every build, and prints the summary. Each entry
         script supplies only its distro label and lean base target, so all three
         remain runnable on their own.
-    .REMARKS
+    .NOTE
         1. Build the image definitions with Get-ImageBuildDefinitions.
         2. Ensure the tools context with Initialize-ImageBuildToolsContext.
         3. Print the settings block.

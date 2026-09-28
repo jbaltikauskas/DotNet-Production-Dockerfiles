@@ -7,7 +7,7 @@ function Assert-Cli () {
         VersionArgs is supplied, runs the command with those arguments and
         returns the trimmed output (for example the docker client version);
         otherwise returns nothing.
-    .REMARKS
+    .NOTE
         1. Locate the command with Get-Command; throw when missing.
         2. Return when no VersionArgs were supplied.
         3. Run the command with VersionArgs and return the trimmed output.

@@ -8,7 +8,7 @@ function Get-DotNetToolsFileInfo () {
         runtime config or deps manifest details, and .NET assembly metadata
         for *.dll files. Kind is one of: Managed assembly, Native library,
         Runtime config, Dependency manifest, Other.
-    .REMARKS
+    .NOTE
         1. Resolve the file and its path relative to RootDirectory.
         2. Read the SHA-256 hash and the Win32 version resource.
         3. For *.dll, read assembly metadata with Get-DotNetToolsAssemblyInfo.
@@ -86,7 +86,7 @@ function Resolve-DotNetToolsFileKind () {
         Returns 'Managed assembly', 'Native library', 'Runtime config',
         'Dependency manifest', or 'Other'. A *.dll without .NET metadata is
         reported as a native library.
-    .REMARKS
+    .NOTE
         1. Managed assembly when Assembly.IsManaged is true.
         2. Runtime config or dependency manifest by file-name suffix.
         3. Native library for *.so, *.dylib, and unmanaged *.dll.
@@ -139,7 +139,7 @@ function Get-DotNetToolsSigner () {
         Returns $null on other platforms, for other file types (ELF .so files
         cannot carry Authenticode), and when Get-AuthenticodeSignature is
         unavailable.
-    .REMARKS
+    .NOTE
         1. Return $null when not on Windows or the file is not a PE binary.
         2. Read the signature and return status plus signer common name.
     #>

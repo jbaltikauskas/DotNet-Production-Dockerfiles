@@ -6,7 +6,7 @@ function Write-ScriptError () {
         Shared catch handler for entry scripts. Prints the exception type and
         message, then the red failure line. Prompts for Enter only when
         -WaitOnExit is set, so a terminal or CI run exits immediately.
-    .REMARKS
+    .NOTE
         1. Print the exception type and message.
         2. Print the failure banner.
         3. When WaitOnExit is set, wait for Enter.

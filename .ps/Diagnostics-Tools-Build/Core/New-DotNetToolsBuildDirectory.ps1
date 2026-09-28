@@ -4,7 +4,7 @@ function New-DotNetToolsBuildDirectory () {
         Creates dockerfiles\.build under the repository root.
     .DESCRIPTION
         NuGet packages and their extracted contents are written under this folder.
-    .REMARKS
+    .NOTE
         1. Resolve dockerfiles\.build under RepositoryRoot.
         2. Create the directory when it does not exist.
         3. Return the absolute path.

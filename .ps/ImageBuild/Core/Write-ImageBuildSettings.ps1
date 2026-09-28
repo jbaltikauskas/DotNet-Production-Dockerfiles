@@ -5,7 +5,7 @@ function Write-ImageBuildSettings () {
     .DESCRIPTION
         Prints repository root, distro label, cache flag, dotnet-tools
         context path, and the list of image builds that will run.
-    .REMARKS
+    .NOTE
         1. Print a labelled header block.
         2. List each build's tag and buildx target.
     #>

@@ -6,7 +6,7 @@ function New-DotNetToolsMarkdownTable () {
         Returns a string array: header row, separator row, then one row per
         entry in Rows. Every cell is escaped with ConvertTo-DotNetToolsMarkdownCell.
         Returns a single '_None._' line when Rows is empty.
-    .REMARKS
+    .NOTE
         1. Return '_None._' when there are no rows.
         2. Emit the header and separator rows.
         3. Emit each data row with escaped cells.
@@ -54,7 +54,7 @@ function ConvertTo-DotNetToolsMarkdownCell () {
     .DESCRIPTION
         Returns '—' for null or empty values. Escapes '|' and replaces line
         breaks with spaces so the value cannot break the table layout.
-    .REMARKS
+    .NOTE
         1. Return '—' for empty input.
         2. Collapse line breaks and escape pipes.
     #>
@@ -88,7 +88,7 @@ function Format-DotNetToolsFileSize () {
         Formats a byte count as B, KB, or MB.
     .DESCRIPTION
         Uses 1024-based units with one decimal place for KB and MB.
-    .REMARKS
+    .NOTE
         1. Pick the largest unit that keeps the value at or above 1.
         2. Return the formatted string.
     #>

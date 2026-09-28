@@ -6,7 +6,7 @@ function Invoke-ImageBuildBatch () {
         Iterates ImageBuilds and calls Invoke-DockerImageBuild once per entry.
         Adds the shared dotnet-tools build context whenever the entry's
         IncludeTools property is $true.
-    .REMARKS
+    .NOTE
         1. For each build print a green start banner.
         2. Splat the entry's fields into Invoke-DockerImageBuild.
         3. Append DotNetToolsContext when IncludeTools is $true.

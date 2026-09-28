@@ -6,7 +6,7 @@ function Assert-LastExitCode () {
         Reads the automatic $LASTEXITCODE and throws a descriptive error that
         names the activity when it is non-zero. Call immediately after a native
         command so $LASTEXITCODE still reflects that command.
-    .REMARKS
+    .NOTE
         1. Return when $LASTEXITCODE is zero or unset.
         2. Otherwise throw "<Activity> failed with exit code <code>.".
     #>

@@ -4,7 +4,7 @@ function Write-ImageBuildSummary () {
         Prints the cyan "Built N image(s)" summary shown at the end of each run.
     .DESCRIPTION
         Called from the entry script once every build in ImageBuilds completes.
-    .REMARKS
+    .NOTE
         1. Print the total count.
         2. Print each tag on its own line.
     #>

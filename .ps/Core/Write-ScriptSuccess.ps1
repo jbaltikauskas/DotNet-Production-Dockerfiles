@@ -5,7 +5,7 @@ function Write-ScriptSuccess () {
     .DESCRIPTION
         Shared success path for entry scripts. Prompts for Enter only when
         -WaitOnExit is set, so a terminal or CI run exits immediately.
-    .REMARKS
+    .NOTE
         1. Print the success banner.
         2. When WaitOnExit is set, wait for Enter.
     #>

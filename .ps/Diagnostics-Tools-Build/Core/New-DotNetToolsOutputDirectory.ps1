@@ -4,7 +4,7 @@ function New-DotNetToolsOutputDirectory () {
         Creates the shared dotnet-tools folder under Build.
     .DESCRIPTION
         Runtime files copied from each extracted package are written here.
-    .REMARKS
+    .NOTE
         1. Resolve Build\dotnet-tools.
         2. Create the directory when it does not exist.
         3. Return the absolute path.
