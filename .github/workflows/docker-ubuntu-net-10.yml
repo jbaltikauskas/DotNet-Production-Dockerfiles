@@ -1,0 +1,105 @@
+name: Docker Ubuntu .NET 10
+
+# Publishes ghcr.io/<owner>/ubuntu-net-10
+# Target: aspnet-base, without the dotnet-tools build context.
+
+on:
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+  REGISTRY: ghcr.io
+
+  IMAGE_NAME: ubuntu-net-10
+
+  DOCKERFILE: ./dockerfiles/ubuntu/10/Dockerfile
+
+  DOCKER_BUILD_CONTEXT: ./dockerfiles/ubuntu/10
+
+  DOTNET_VERSION: "10.0"
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set image datetime tag
+        id: image-datetime
+        run: echo "tag=$(date -u +'%Y%m%d-%H%M')" >> "$GITHUB_OUTPUT"
+
+      - name: Image name for GHCR (lowercase)
+        id: image
+        run: |
+          owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')
+          echo "name=${owner}/${{ env.IMAGE_NAME }}" >> "$GITHUB_OUTPUT"
+
+      - name: Install cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@v4.1.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4.1.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: github
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+        with:
+          images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}
+          flavor: |
+            latest=false
+          tags: |
+            type=raw,value=${{ steps.image-datetime.outputs.tag }}
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.description=Contoso .NET 10 base image (Ubuntu Noble)
+          annotations: |
+            org.opencontainers.image.description=Contoso .NET 10 base image (Ubuntu Noble)
+
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ env.DOCKER_BUILD_CONTEXT }}
+          file: ${{ env.DOCKERFILE }}
+          target: aspnet-base
+          build-args: |
+            DOTNET_VERSION=${{ env.DOTNET_VERSION }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.image-datetime.outputs.tag }}
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:latest
+          labels: |
+            ${{ steps.meta.outputs.labels }}
+          annotations: |
+            ${{ steps.meta.outputs.annotations }}
+          cache-from: type=gha,scope=${{ env.IMAGE_NAME }}
+          cache-to: type=gha,mode=max,scope=${{ env.IMAGE_NAME }}
+
+      - name: Sign the published Docker image
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: |
+          printf '%s\n' \
+            "${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.image-datetime.outputs.tag }}" \
+            "${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:latest" \
+            | xargs -I {} cosign sign --yes {}@"${DIGEST}"
