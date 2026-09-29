@@ -15,6 +15,11 @@ function Write-ScriptSuccess () {
         [switch]$WaitOnExit
     )
 
+    Begin {
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
+    }
+
     Process {
 
         Write-Host ""

@@ -28,9 +28,8 @@ function Initialize-ImageBuildToolsContext () {
     )
 
     Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {

@@ -27,9 +27,8 @@ function ConvertTo-DotNetToolsMarkdownReport () {
     )
 
     Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
@@ -78,9 +77,8 @@ function Get-DotNetToolsReportHeaderSection () {
     )
 
     Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
@@ -125,6 +123,11 @@ function Get-DotNetToolsReportReferenceSection () {
     #>
     [CmdletBinding()]
     Param ()
+
+    Begin {
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
+    }
 
     Process {
 
@@ -172,9 +175,8 @@ function Get-DotNetToolsReportToolSection () {
     )
 
     Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
@@ -227,9 +229,8 @@ function Get-DotNetToolsReportAssemblySection () {
     )
 
     Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
@@ -279,9 +280,8 @@ function Get-DotNetToolsReportDetailSection () {
     )
 
     Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
@@ -361,9 +361,8 @@ function Get-DotNetToolsReportOtherFileSection () {
     )
 
     Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
@@ -420,9 +419,8 @@ function Get-DotNetToolsReportWarningSection () {
     )
 
     Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {

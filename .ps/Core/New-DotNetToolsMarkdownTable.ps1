@@ -23,9 +23,8 @@ function New-DotNetToolsMarkdownTable () {
     )
 
     Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
@@ -67,9 +66,8 @@ function ConvertTo-DotNetToolsMarkdownCell () {
     )
 
     Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
@@ -100,9 +98,8 @@ function Format-DotNetToolsFileSize () {
     )
 
     Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {

@@ -24,9 +24,8 @@ function Get-DotNetToolsAssemblyInfo () {
     )
 
     Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
@@ -111,9 +110,8 @@ function Get-DotNetToolsAssemblyAttributes () {
     )
 
     Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
@@ -185,9 +183,8 @@ function Get-DotNetToolsAttributeTypeName () {
     )
 
     Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
@@ -233,9 +230,8 @@ function ConvertTo-DotNetToolsTfm () {
     )
 
     Begin {
-        if ($PSBoundParameters.ContainsKey('Verbose') -or $VerbosePreference -eq 'Continue') {
-            $PSBoundParameters | Out-String | Write-Host
-        }
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {

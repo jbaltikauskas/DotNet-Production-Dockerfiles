@@ -99,12 +99,8 @@ function Resolve-SolutionFileName {
     )
 
     Begin {
-
-        Write-Host ""
-        Write-Host "--------------------------------- BEGIN: Resolve-SolutionFileName ---------------------------------------------" -ForegroundColor "Yellow"
-        Write-Host ""
-
-        $PSBoundParameters | Out-String | Write-Host
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
@@ -160,12 +156,8 @@ function TaskCompileVSSolution {
     )
 
     Begin {
-
-        Write-Host ""
-        Write-Host "--------------------------------- BEGIN: TaskCompileVSSolution ---------------------------------------------" -ForegroundColor "Yellow"
-        Write-Host ""
-
-        $PSBoundParameters | Out-String | Write-Host
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
@@ -275,12 +267,8 @@ function Stop-UdfProcesses {
     )
 
     Begin {
-
-        Write-Host ""
-        Write-Host "--------------------------------- BEGIN: Stop-UdfProcesses ---------------------------------------------" -ForegroundColor "Yellow"
-        Write-Host ""
-
-        $PSBoundParameters | Out-String | Write-Host
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
@@ -338,12 +326,8 @@ function Copy-BuildArtifacts {
     )
 
     Begin {
-
-        Write-Host ""
-        Write-Host "--------------------------------- BEGIN: Copy-BuildArtifacts ---------------------------------------------" -ForegroundColor "Yellow"
-        Write-Host ""
-
-        $PSBoundParameters | Out-String | Write-Host
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
@@ -397,6 +381,11 @@ function Get-TestAppImageBuilds {
         [string]$DotNetVersion
     )
 
+    Begin {
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
+    }
+
     Process {
 
         return @(
@@ -448,12 +437,8 @@ function Build-TestAppDockerImages {
     )
 
     Begin {
-
-        Write-Host ""
-        Write-Host "--------------------------------- BEGIN: Build-TestAppDockerImages ---------------------------------------------" -ForegroundColor "Yellow"
-        Write-Host ""
-
-        $PSBoundParameters | Out-String | Write-Host
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
@@ -533,12 +518,8 @@ function Start-TestAppContainersDetached {
     )
 
     Begin {
-
-        Write-Host ""
-        Write-Host "--------------------------------- BEGIN: Start-TestAppContainersDetached ---------------------------------------------" -ForegroundColor "Yellow"
-        Write-Host ""
-
-        $PSBoundParameters | Out-String | Write-Host
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {

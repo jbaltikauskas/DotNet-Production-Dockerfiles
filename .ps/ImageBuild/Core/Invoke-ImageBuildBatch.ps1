@@ -30,6 +30,11 @@ function Invoke-ImageBuildBatch () {
         [bool]$NoCache
     )
 
+    Begin {
+        Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
+        Write-Verbose ($PSBoundParameters | Out-String)
+    }
+
     Process {
 
         foreach ($imageBuild in $ImageBuilds) {
