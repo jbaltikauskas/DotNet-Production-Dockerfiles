@@ -4,7 +4,7 @@ function Initialize-ImageBuildToolsContext () {
         Ensures the dotnet-tools build context exists before a tools image build.
     .DESCRIPTION
         When any entry in ImageBuilds sets IncludeTools, the merged
-        dockerfiles\.dotnet-tools folder must exist and be non-empty. When it is
+        dockerfiles/.dotnet-tools folder must exist and be non-empty. When it is
         already populated it is reused; otherwise DotNet-Tools.ps1 is invoked to
         publish it. Does nothing when no build in the list includes the tools.
     .NOTE
@@ -51,6 +51,6 @@ function Initialize-ImageBuildToolsContext () {
 
         Invoke-ImageBuildScript `
             -RepositoryRoot $RepositoryRoot `
-            -RelativePath '.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1'
+            -RelativePath '.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1'
     }
 }

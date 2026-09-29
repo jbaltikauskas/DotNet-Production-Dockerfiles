@@ -86,7 +86,7 @@ function Invoke-DockerImageBuild () {
         if (-not [string]::IsNullOrWhiteSpace($DotNetToolsContext)) {
             $toolsContextFull = [System.IO.Path]::GetFullPath((Join-Path $RepositoryRoot $DotNetToolsContext))
             if (-not (Test-Path -LiteralPath $toolsContextFull -PathType Container)) {
-                throw "dotnet-tools build context folder was not found: '$toolsContextFull'. Run .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1 first."
+                throw "dotnet-tools build context folder was not found: '$toolsContextFull'. Run .ps/Diagnostics-Tools-Build/DotNet-Tools.ps1 first."
             }
 
             $arguments.Add('--build-context')

@@ -43,7 +43,7 @@ function Export-DotNetToolsAssemblyReport () {
             throw "Tools folder was not found: '$toolsDirectoryPath'. Run DotNet-Tools.ps1 first."
         }
 
-        $sourceFiles = @(Get-ChildItem -LiteralPath $toolsDirectoryPath -File -Recurse |
+        $sourceFiles = @(Get-ChildItem -LiteralPath $toolsDirectoryPath -File -Recurse -Force |
             Where-Object { $_.FullName -ne $outputFilePath })
 
         $files = [System.Collections.Generic.List[object]]::new()

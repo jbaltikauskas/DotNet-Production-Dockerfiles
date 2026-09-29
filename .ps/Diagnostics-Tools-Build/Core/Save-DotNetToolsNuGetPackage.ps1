@@ -1,7 +1,7 @@
 function Save-DotNetToolsNuGetPackage () {
     <#
     .SYNOPSIS
-        Downloads one NuGet package into dockerfiles\.build.
+        Downloads one NuGet package into dockerfiles/.build.
     .DESCRIPTION
         Saves the .nupkg from the NuGet flat container and removes older
         archives for the same package id.
@@ -20,7 +20,7 @@ function Save-DotNetToolsNuGetPackage () {
         [ValidateNotNullOrEmpty()]
         [string]$Version,
 
-        [Parameter(Mandatory = $true, HelpMessage = 'Path to the dockerfiles\.build folder the .nupkg is saved into.')]
+        [Parameter(Mandatory = $true, HelpMessage = 'Path to the dockerfiles/.build folder the .nupkg is saved into.')]
         [ValidateNotNullOrEmpty()]
         [string]$BuildDirectory
     )

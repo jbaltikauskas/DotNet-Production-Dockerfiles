@@ -48,15 +48,15 @@
     on Windows.
 
 .EXAMPLE
-    PS> .\.ps\Core\Export-DotNetArtifactReport.ps1 -ToolsDirectory .\dockerfiles\.dotnet-tools -OutputPath .\dockerfiles\.dotnet-tools\dotnet-assembly-report.md
+    PS> ./.ps/Core/Export-DotNetArtifactReport.ps1 -ToolsDirectory ./dockerfiles/.dotnet-tools -OutputPath ./dockerfiles/.dotnet-tools/dotnet-assembly-report.md
     Scans the merged diagnostics-tools folder and writes its assembly report.
 
 .EXAMPLE
-    PS> .\.ps\Core\Export-DotNetArtifactReport.ps1 -ToolsDirectory .\src\MyApp\bin\Release\net8.0 -OutputPath .\artifacts\myapp-report.md
+    PS> ./.ps/Core/Export-DotNetArtifactReport.ps1 -ToolsDirectory ./src/MyApp/bin/Release/net8.0 -OutputPath ./artifacts/myapp-report.md
     Scans a published output folder and writes the report under artifacts.
 
 .EXAMPLE
-    PS> .\.ps\Core\Export-DotNetArtifactReport.ps1 -ToolsDirectory .\bin -OutputPath .\bin\report.md -WaitOnExit
+    PS> ./.ps/Core/Export-DotNetArtifactReport.ps1 -ToolsDirectory ./bin -OutputPath ./bin/report.md -WaitOnExit
     Writes the report and waits for Enter before the window closes.
 #>
 

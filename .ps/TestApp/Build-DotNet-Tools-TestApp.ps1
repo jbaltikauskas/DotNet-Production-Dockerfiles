@@ -1,20 +1,23 @@
+#!/usr/bin/env pwsh
+#Requires -Version 7.2
 <#
 .SYNOPSIS
     Build script for the solution using dotnet CLI, then the three test-app images.
 .DESCRIPTION
     Builds the solution by using dotnet restore + dotnet build, copies artifacts
-    to tests\.build, builds the three test-app Docker images, and starts each
+    to tests/.build, builds the three test-app Docker images, and starts each
     container detached.
 
     Steps performed:
-      1. Kill any running VBCSCompiler and MSBuild processes to release file locks
+      1. On Windows only, kill any running VBCSCompiler and MSBuild processes to
+            release file locks on the build output
       2. Verify dotnet CLI is available in PATH
       3. Resolve solution file: use -solutionFileName if provided, otherwise scan
-            tests\DotNet-Tools-TestApp for the first *.slnx file found; throw if none exists
+            tests/DotNet-Tools-TestApp for the first *.slnx file in name order; throw if none exists
       4. Set build property EnableLocalDevelopment=true
       5. Run dotnet restore against the solution for linux-x64 only
       6. Run dotnet build for linux-x64 in selected configuration / x64 / minimal verbosity
-      7. Copy linux-x64 artifacts to tests\.build (keeps .gitignore, .dockerignore, .DotNet-Tools-Commands.txt, and dotnet-assembly-report.md)
+      7. Copy linux-x64 artifacts to tests/.build (keeps .gitignore, .dockerignore, .DotNet-Tools-Commands.txt, and dotnet-assembly-report.md)
       8. Build the three test-app images (alpine / ubuntu / ubuntu-chiseled)
       9. Run each test-app container detached (replaces any prior container of the same name)
      10. Report total elapsed build time
@@ -31,12 +34,12 @@
             container: dotnet-tools-testapp-ubuntu-chiseled-10
 
     Requires the matching diagnostics-tools base images already built
-    (e.g. via .\Image-TestBuild-DotNet-Tools-TestApp.ps1 or Image-Build-*-ToolsOnly).
+    (e.g. via ./Image-TestBuild-DotNet-Tools-TestApp.ps1 or Image-Build-*-ToolsOnly).
 
 .PARAMETER solutionFileName
     Optional solution file name to build. When omitted the script scans
-    tests\DotNet-Tools-TestApp for the first *.slnx file it finds and uses that
-    automatically.
+    tests/DotNet-Tools-TestApp for the first *.slnx file in name order and uses
+    that automatically.
 .PARAMETER buildConfiguration
     Build configuration for dotnet build (Debug, Release, or custom). Defaults to Debug.
 .PARAMETER DotNetVersion
@@ -47,13 +50,13 @@
 .PARAMETER WaitOnExit
     When set, clears the console at start and waits for Enter after success
     or failure so a double-clicked console window stays open. Omit it when
-    this script is called from .\Image-TestBuild-DotNet-Tools-TestApp.ps1 or from a terminal.
+    this script is called from ./Image-TestBuild-DotNet-Tools-TestApp.ps1 or from a terminal.
 .EXAMPLE
-    .\.ps\TestApp\Build-DotNet-Tools-TestApp.ps1
-    .\.ps\TestApp\Build-DotNet-Tools-TestApp.ps1 -buildConfiguration "Debug"
-    .\.ps\TestApp\Build-DotNet-Tools-TestApp.ps1 -solutionFileName "MyOther.slnx" -buildConfiguration "Release"
-    .\.ps\TestApp\Build-DotNet-Tools-TestApp.ps1 -DotNetVersion 10 -NoCache:$false
-    .\.ps\TestApp\Build-DotNet-Tools-TestApp.ps1 -WaitOnExit
+    ./.ps/TestApp/Build-DotNet-Tools-TestApp.ps1
+    ./.ps/TestApp/Build-DotNet-Tools-TestApp.ps1 -buildConfiguration "Debug"
+    ./.ps/TestApp/Build-DotNet-Tools-TestApp.ps1 -solutionFileName "MyOther.slnx" -buildConfiguration "Release"
+    ./.ps/TestApp/Build-DotNet-Tools-TestApp.ps1 -DotNetVersion 10 -NoCache:$false
+    ./.ps/TestApp/Build-DotNet-Tools-TestApp.ps1 -WaitOnExit
 #>
 [CmdletBinding()]
 param(
@@ -78,16 +81,18 @@ param(
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 
-. (Join-Path $PSScriptRoot '..\Core\Write-ScriptError.ps1')
-. (Join-Path $PSScriptRoot '..\Core\Write-ScriptSuccess.ps1')
-. (Join-Path $PSScriptRoot '..\Core\Assert-LastExitCode.ps1')
-. (Join-Path $PSScriptRoot '..\Core\Assert-Cli.ps1')
+. (Join-Path $PSScriptRoot '../Core/Write-ScriptError.ps1')
+. (Join-Path $PSScriptRoot '../Core/Write-ScriptSuccess.ps1')
+. (Join-Path $PSScriptRoot '../Core/Assert-LastExitCode.ps1')
+. (Join-Path $PSScriptRoot '../Core/Assert-Cli.ps1')
 
 <#
     .DESCRIPTION
         Returns the solution file name to build.
         Uses the supplied name when provided; otherwise scans $searchDirectory for
-        the first *.slnx file and returns its name. Throws if none is found.
+        the first *.slnx file in name order and returns its name. Throws if none
+        is found. Extensions are matched case-insensitively and results are sorted
+        so the same solution is picked on case-sensitive file systems.
 #>
 function Resolve-SolutionFileName {
 
@@ -104,13 +109,16 @@ function Resolve-SolutionFileName {
     }
 
     Process {
-        $found = [System.IO.Directory]::GetFiles($searchDirectory, "*.slnx") | Select-Object -First 1
+        $found = Get-ChildItem -LiteralPath $searchDirectory -File |
+            Where-Object { $_.Extension -eq '.slnx' } |
+            Sort-Object -Property Name |
+            Select-Object -First 1
 
         if ($null -eq $found) {
             throw "No *.slnx file found in '$searchDirectory'. Supply -solutionFileName explicitly."
         }
 
-        [string]$fileName = [System.IO.Path]::GetFileName($found)
+        [string]$fileName = $found.Name
 
         Write-Host "Solution file (auto-detected):"
         Write-Host "    $fileName" -ForegroundColor "Green"
@@ -302,7 +310,7 @@ function Stop-UdfProcesses {
 
 <#
     .DESCRIPTION
-        Copies linux-x64 build output from the project bin folder into tests\.build.
+        Copies linux-x64 build output from the project bin folder into tests/.build.
 #>
 function Copy-BuildArtifacts {
 
@@ -332,7 +340,7 @@ function Copy-BuildArtifacts {
 
     Process {
 
-        [string]$sourceDirectory = Join-Path $workingDirectory "bin\x64\$configuration\net10.0\$runtimeIdentifier"
+        [string]$sourceDirectory = Join-Path $workingDirectory 'bin' 'x64' $configuration 'net10.0' $runtimeIdentifier
 
         Write-Host "Source:"
         Write-Host "    $sourceDirectory" -ForegroundColor "Green"
@@ -413,7 +421,7 @@ function Get-TestAppImageBuilds {
 
 <#
     .DESCRIPTION
-        Builds the three test-app Docker images from tests\.build onto the
+        Builds the three test-app Docker images from tests/.build onto the
         diagnostics-tools bases. Context is always tests/.build.
 #>
 function Build-TestAppDockerImages {
@@ -452,7 +460,7 @@ function Build-TestAppDockerImages {
             }
         }
 
-        $buildContextFull = Join-Path $RepositoryRoot 'tests\.build'
+        $buildContextFull = Join-Path $RepositoryRoot 'tests' '.build'
         if (-not (Test-Path -LiteralPath $buildContextFull -PathType Container)) {
             throw "Required test-app build context folder was not found: '$buildContextFull'."
         }
@@ -581,15 +589,20 @@ try {
         Clear-Host
     }
 
-    Stop-UdfProcesses -processName "VBCSCompiler"
-    
-    Stop-UdfProcesses -processName "MSBuild"
+    # Only Windows keeps the previous build output locked by these processes;
+    # elsewhere the files can be replaced while they are still open.
+    if ($IsWindows) {
+
+        Stop-UdfProcesses -processName "VBCSCompiler"
+
+        Stop-UdfProcesses -processName "MSBuild"
+    }
 
     Assert-Cli -Name 'dotnet'
 
-    [string]$repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
+    [string]$repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..' '..'))
     [string]$testsRoot = Join-Path $repositoryRoot 'tests'
-    [string]$rootFolder = (Join-Path $testsRoot "DotNet-Tools-TestApp") + "\"
+    [string]$rootFolder = Join-Path $testsRoot 'DotNet-Tools-TestApp'
 
     if (-not (Test-Path -LiteralPath $rootFolder -PathType Container)) {
         throw "Solution folder not found: '$rootFolder'"
@@ -604,9 +617,9 @@ try {
     Write-Host "--------------------------------- BEGIN: Settings ---------------------------------------------" -ForegroundColor "Yellow"
     Write-Host ""
     Write-Host "The script folder:"
-    Write-Host "  $PSScriptRoot\" -ForegroundColor "Green"
+    Write-Host "  $PSScriptRoot" -ForegroundColor "Green"
     Write-Host "The tests folder:"
-    Write-Host "  $testsRoot\" -ForegroundColor "Green"
+    Write-Host "  $testsRoot" -ForegroundColor "Green"
     Write-Host "The solution folder:"
     Write-Host "  $rootFolder" -ForegroundColor "Green"
     Write-Host ""

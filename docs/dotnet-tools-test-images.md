@@ -15,7 +15,7 @@ The script owns the order of that flow. Later steps (attach `dotnet-trace` / `do
 Run from the repository root:
 
 ```powershell
-.\Image-TestBuild-DotNet-Tools-TestApp.ps1
+./Image-TestBuild-DotNet-Tools-TestApp.ps1
 ```
 
 Top-down flow:
@@ -31,27 +31,27 @@ Top-down flow:
 9. Run [`.ps/Core/Export-DotNetArtifactReport.ps1`](../.ps/Core/Export-DotNetArtifactReport.ps1) to scan `dockerfiles/.dotnet-tools` and write [`tests/.build/dotnet-assembly-report.md`](../tests/.build/). This runs before the test-app build so the report is part of the `tests/.build` docker context and lands at `/app/dotnet-assembly-report.md` in each test-app image.
 10. Invoke [`.ps/TestApp/Build-DotNet-Tools-TestApp.ps1`](../.ps/TestApp/Build-DotNet-Tools-TestApp.ps1), which:
    - restores and builds the test app for `linux-x64`
-   - copies artifacts to `tests\.build` (keeping the report written above)
+   - copies artifacts to `tests/.build` (keeping the report written above)
    - builds the three test-app images
    - starts each container with `docker run -d`
 
-Step 4 writes the commands file into `tests\.build` (the folder is created when it is missing). Step 5 publishes the diagnostic NuGet tools. Steps 6–8 invoke the per-distro entry scripts with `-ToolsOnly` and forward `-DotNetVersion` and `-NoCache`. Step 9 writes the assembly report into `tests\.build` from `dockerfiles/.dotnet-tools`. Step 10 forwards `-BuildConfiguration`, `-DotNetVersion`, and `-NoCache`. The artifact copy in step 10 leaves `.gitignore`, `.dockerignore`, `.DotNet-Tools-Commands.txt`, and `dotnet-assembly-report.md` in place.
+Step 4 writes the commands file into `tests/.build` (the folder is created when it is missing). Step 5 publishes the diagnostic NuGet tools. Steps 6–8 invoke the per-distro entry scripts with `-ToolsOnly` and forward `-DotNetVersion` and `-NoCache`. Step 9 writes the assembly report into `tests/.build` from `dockerfiles/.dotnet-tools`. Step 10 forwards `-BuildConfiguration`, `-DotNetVersion`, and `-NoCache`. The artifact copy in step 10 leaves `.gitignore`, `.dockerignore`, `.DotNet-Tools-Commands.txt`, and `dotnet-assembly-report.md` in place.
 
 ```text
 Image-TestBuild-DotNet-Tools-TestApp.ps1
     │
-    ├─ tests\.build\.DotNet-Tools-Commands.txt
-    ├─ .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1
-    │      ├─ dockerfiles\.build
-    │      └─ dockerfiles\.dotnet-tools
+    ├─ tests/.build/.DotNet-Tools-Commands.txt
+    ├─ .ps/Diagnostics-Tools-Build/DotNet-Tools.ps1
+    │      ├─ dockerfiles/.build
+    │      └─ dockerfiles/.dotnet-tools
     ├─ Image-Build-Alpine.ps1            -ToolsOnly -DotNetVersion 10
     ├─ Image-Build-Ubuntu.ps1            -ToolsOnly -DotNetVersion 10
     ├─ Image-Build-Ubuntu-Chiseled.ps1   -ToolsOnly -DotNetVersion 10
-    ├─ .ps\Core\Export-DotNetArtifactReport.ps1
-    │      └─ tests\.build\dotnet-assembly-report.md
+    ├─ .ps/Core/Export-DotNetArtifactReport.ps1
+    │      └─ tests/.build/dotnet-assembly-report.md
     │
-    └─ .ps\TestApp\Build-DotNet-Tools-TestApp.ps1
-           ├─ dotnet restore/build + copy to tests\.build
+    └─ .ps/TestApp/Build-DotNet-Tools-TestApp.ps1
+           ├─ dotnet restore/build + copy to tests/.build
            ├─ docker buildx build  (alpine / ubuntu / ubuntu-chiseled test-app)
            └─ docker run -d        (three detached containers)
 ```
@@ -175,7 +175,7 @@ Typical contents of `tests/.build/` used as the Docker build context:
 
 ## Step 3 — test-app images and detached containers
 
-After the linux-x64 artifacts land in `tests\.build`, the same script builds one runnable image per diagnostics-tools base, then starts each container detached (see [Detached containers](#detached-containers--dotnetversion-10) above).
+After the linux-x64 artifacts land in `tests/.build`, the same script builds one runnable image per diagnostics-tools base, then starts each container detached (see [Detached containers](#detached-containers--dotnetversion-10) above).
 
 Each Dockerfile under [`tests/dockerfiles`](../tests/dockerfiles/) starts from the matching tools image and copies the publish output into `/app` as `contoso:contoso` (UID/GID `7777`). Ubuntu and Ubuntu Chiseled set:
 
@@ -211,24 +211,24 @@ From the repository root, with PowerShell 7.2 or later:
 
 ```powershell
 # Full flow: tools images → Debug app → test-app images → detached containers
-.\Image-TestBuild-DotNet-Tools-TestApp.ps1
+./Image-TestBuild-DotNet-Tools-TestApp.ps1
 
 # Reuse the BuildKit cache while iterating on a Dockerfile
-.\Image-TestBuild-DotNet-Tools-TestApp.ps1 -NoCache:$false
+./Image-TestBuild-DotNet-Tools-TestApp.ps1 -NoCache:$false
 
 # Same flow with a Release test app
-.\Image-TestBuild-DotNet-Tools-TestApp.ps1 -BuildConfiguration Release
+./Image-TestBuild-DotNet-Tools-TestApp.ps1 -BuildConfiguration Release
 
 # Explicit .NET 10 (the default) — tags and container names end in -10
-.\Image-TestBuild-DotNet-Tools-TestApp.ps1 -DotNetVersion 10
+./Image-TestBuild-DotNet-Tools-TestApp.ps1 -DotNetVersion 10
 ```
 
 Rebuild the test app, its three images, and restart the detached containers **without** rebuilding the tools bases (tools images must already exist):
 
 ```powershell
-.\.ps\TestApp\Build-DotNet-Tools-TestApp.ps1
-.\.ps\TestApp\Build-DotNet-Tools-TestApp.ps1 -buildConfiguration Release
-.\.ps\TestApp\Build-DotNet-Tools-TestApp.ps1 -DotNetVersion 10 -NoCache:$false
+./.ps/TestApp/Build-DotNet-Tools-TestApp.ps1
+./.ps/TestApp/Build-DotNet-Tools-TestApp.ps1 -buildConfiguration Release
+./.ps/TestApp/Build-DotNet-Tools-TestApp.ps1 -DotNetVersion 10 -NoCache:$false
 ```
 
 `01-Step--DotNetBuild-Debug.bat` launches that same script elevated and waits for Enter.
@@ -238,7 +238,7 @@ Rebuild the test app, its three images, and restart the detached containers **wi
 - PowerShell 7.2 or later (`pwsh`).
 - Docker Engine with BuildKit (`docker buildx` on `PATH`) for the image and container steps.
 - The .NET 10 SDK (`dotnet` on `PATH`) for the test-app compile step.
-- Network access to NuGet. The orchestrator runs [`.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1`](../.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) before the image builds. That script writes `dockerfiles/.build` and `dockerfiles/.dotnet-tools`. See the [diagnostic tools build](diagnostic-tools-build.md).
+- Network access to NuGet. The orchestrator runs [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](../.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) before the image builds. That script writes `dockerfiles/.build` and `dockerfiles/.dotnet-tools`. See the [diagnostic tools build](diagnostic-tools-build.md).
 
 ## When a step fails
 

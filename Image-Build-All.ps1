@@ -10,11 +10,11 @@
 
         1. Resolve the repository root next to this script.
         2. Dot-source Write-ScriptError and Write-ScriptSuccess from
-           .ps\ImageBuild\Core so failure and success paths mirror the
+           .ps/Core so failure and success paths mirror the
            per-distro scripts.
         3. Validate that DotNet-Tools.ps1 and the three per-distro scripts exist.
-        4. Invoke .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1, which writes
-           dockerfiles\.build and dockerfiles\.dotnet-tools.
+        4. Invoke .ps/Diagnostics-Tools-Build/DotNet-Tools.ps1, which writes
+           dockerfiles/.build and dockerfiles/.dotnet-tools.
         5. Invoke Image-Build-Alpine.ps1          (primary base).
         6. Invoke Image-Build-Ubuntu.ps1          (secondary base).
         7. Invoke Image-Build-Ubuntu-Chiseled.ps1 (last-resort distroless).
@@ -56,21 +56,21 @@
 .NOTES
     Requires PowerShell 7.2+, a working Docker installation with buildx, and
     network access to NuGet. This script runs
-    .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1, which downloads the
-    diagnostic packages into dockerfiles\.build and publishes the merged
-    Linux tree to dockerfiles\.dotnet-tools.
+    .ps/Diagnostics-Tools-Build/DotNet-Tools.ps1, which downloads the
+    diagnostic packages into dockerfiles/.build and publishes the merged
+    Linux tree to dockerfiles/.dotnet-tools.
 
 .EXAMPLE
-    PS> .\Image-Build-All.ps1
-    Publishes dockerfiles\.build and dockerfiles\.dotnet-tools, then builds
+    PS> ./Image-Build-All.ps1
+    Publishes dockerfiles/.build and dockerfiles/.dotnet-tools, then builds
     every image in all three distros.
 
 .EXAMPLE
-    PS> .\Image-Build-All.ps1 -NoCache:$false
+    PS> ./Image-Build-All.ps1 -NoCache:$false
     Builds every image while allowing the BuildKit cache.
 
 .EXAMPLE
-    PS> .\Image-Build-All.ps1 -DotNetVersion 10
+    PS> ./Image-Build-All.ps1 -DotNetVersion 10
     Builds every image under the dockerfiles/<distro>/10 folders.
 #>
 
@@ -93,16 +93,16 @@ if ([string]::IsNullOrWhiteSpace($scriptRoot)) {
     $scriptRoot = (Get-Location).Path
 }
 
-$modulePath = Join-Path $scriptRoot '.ps\ImageBuild'
+$modulePath = Join-Path $scriptRoot '.ps/ImageBuild'
 if (-not (Test-Path -LiteralPath $modulePath -PathType Container)) {
     throw "Required helper folder not found: '$modulePath'."
 }
 
-. (Join-Path $modulePath '..\Core\Write-ScriptError.ps1')
-. (Join-Path $modulePath '..\Core\Write-ScriptSuccess.ps1')
-. (Join-Path $modulePath '..\Core\Write-Section.ps1')
-. (Join-Path $modulePath '..\Core\Assert-LastExitCode.ps1')
-. (Join-Path $modulePath 'Core\Invoke-ImageBuildScript.ps1')
+. (Join-Path $modulePath '../Core/Write-ScriptError.ps1')
+. (Join-Path $modulePath '../Core/Write-ScriptSuccess.ps1')
+. (Join-Path $modulePath '../Core/Write-Section.ps1')
+. (Join-Path $modulePath '../Core/Assert-LastExitCode.ps1')
+. (Join-Path $modulePath 'Core/Invoke-ImageBuildScript.ps1')
 
 try {
 
@@ -116,7 +116,7 @@ try {
 
     Invoke-ImageBuildScript `
         -RepositoryRoot $repositoryRoot `
-        -RelativePath '.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1'
+        -RelativePath '.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1'
 
     foreach ($relativePath in $distroScripts) {
         Invoke-ImageBuildScript `

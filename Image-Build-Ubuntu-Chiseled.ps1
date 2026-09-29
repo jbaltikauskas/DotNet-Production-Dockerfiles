@@ -8,11 +8,11 @@
     Top-down flow when this script runs:
 
         1. Resolve the repository root next to this script.
-        2. Load helper functions from .ps\ImageBuild\Core.
-        3. When dockerfiles\.dotnet-tools is missing or empty, invoke
-           .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1 before the tools
-           image. That script writes dockerfiles\.build and
-           dockerfiles\.dotnet-tools. -WaitOnExit is not forwarded.
+        2. Load helper functions from .ps/Core and .ps/ImageBuild/Core.
+        3. When dockerfiles/.dotnet-tools is missing or empty, invoke
+           .ps/Diagnostics-Tools-Build/DotNet-Tools.ps1 before the tools
+           image. That script writes dockerfiles/.build and
+           dockerfiles/.dotnet-tools. -WaitOnExit is not forwarded.
            An existing folder is reused.
         4. Verify that the docker CLI is available.
         5. Build Ubuntu Chiseled images tagged :latest. Both images run unless
@@ -61,30 +61,30 @@
 .NOTES
     Requires PowerShell 7.2+, a working Docker installation with buildx, and
     network access to NuGet when dockerfiles/.dotnet-tools is missing. This
-    script then runs .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1, which
-    writes dockerfiles\.build and dockerfiles\.dotnet-tools. An existing
+    script then runs .ps/Diagnostics-Tools-Build/DotNet-Tools.ps1, which
+    writes dockerfiles/.build and dockerfiles/.dotnet-tools. An existing
     tools folder is reused. The lean runtime-base image does not need it.
 
 .EXAMPLE
-    PS> .\Image-Build-Ubuntu-Chiseled.ps1
-    Publishes dockerfiles\.dotnet-tools when that folder is missing, then
+    PS> ./Image-Build-Ubuntu-Chiseled.ps1
+    Publishes dockerfiles/.dotnet-tools when that folder is missing, then
     builds contoso/ubuntu-chiseled-net-dotnet-tools-10:latest and
     contoso/ubuntu-chiseled-net-10:latest.
 
 .EXAMPLE
-    PS> .\Image-Build-Ubuntu-Chiseled.ps1 -DotNetVersion 10
+    PS> ./Image-Build-Ubuntu-Chiseled.ps1 -DotNetVersion 10
     Builds the Ubuntu Chiseled images under dockerfiles/ubuntu-chiseled/10.
 
 .EXAMPLE
-    PS> .\Image-Build-Ubuntu-Chiseled.ps1 -NoCache:$false
+    PS> ./Image-Build-Ubuntu-Chiseled.ps1 -NoCache:$false
     Builds both Ubuntu Chiseled images with BuildKit cache enabled.
 
 .EXAMPLE
-    PS> .\Image-Build-Ubuntu-Chiseled.ps1 -ToolsOnly
+    PS> ./Image-Build-Ubuntu-Chiseled.ps1 -ToolsOnly
     Builds only contoso/ubuntu-chiseled-net-dotnet-tools-10:latest.
 
 .EXAMPLE
-    PS> .\Image-Build-Ubuntu-Chiseled.ps1 -WaitOnExit
+    PS> ./Image-Build-Ubuntu-Chiseled.ps1 -WaitOnExit
     Builds both Ubuntu Chiseled images and waits for Enter before the window closes.
 #>
 
@@ -113,13 +113,13 @@ if ([string]::IsNullOrWhiteSpace($scriptRoot)) {
     $scriptRoot = (Get-Location).Path
 }
 
-$modulePath = Join-Path $scriptRoot '.ps\ImageBuild'
+$modulePath = Join-Path $scriptRoot '.ps' 'ImageBuild'
 if (-not (Test-Path -LiteralPath $modulePath -PathType Container)) {
     throw "Required helper folder not found: '$modulePath'."
 }
 
-. (Join-Path $modulePath '..\Core\Write-ScriptError.ps1')
-. (Join-Path $modulePath '..\Core\Write-ScriptSuccess.ps1')
+. (Join-Path $modulePath '../Core/Write-ScriptError.ps1')
+. (Join-Path $modulePath '../Core/Write-ScriptSuccess.ps1')
 
 try {
 
@@ -128,21 +128,21 @@ try {
     Write-Output "Loading module files:"
 
     $moduleFiles = @(
-        '..\Core\Assert-Cli.ps1'
-        '..\Core\Assert-LastExitCode.ps1'
-        '..\Core\Write-Section.ps1'
-        'Core\Invoke-DockerImageBuild.ps1'
-        'Core\Invoke-ImageBuildBatch.ps1'
-        'Core\Write-ImageBuildSettings.ps1'
-        'Core\Write-ImageBuildSummary.ps1'
-        'Core\Invoke-ImageBuildScript.ps1'
-        'Core\Get-ImageBuildDefinitions.ps1'
-        'Core\Initialize-ImageBuildToolsContext.ps1'
-        'Core\Invoke-ImageBuildForDistro.ps1'
+        '../Core/Assert-Cli.ps1'
+        '../Core/Assert-LastExitCode.ps1'
+        '../Core/Write-Section.ps1'
+        'Core/Invoke-DockerImageBuild.ps1'
+        'Core/Invoke-ImageBuildBatch.ps1'
+        'Core/Write-ImageBuildSettings.ps1'
+        'Core/Write-ImageBuildSummary.ps1'
+        'Core/Invoke-ImageBuildScript.ps1'
+        'Core/Get-ImageBuildDefinitions.ps1'
+        'Core/Initialize-ImageBuildToolsContext.ps1'
+        'Core/Invoke-ImageBuildForDistro.ps1'
     )
 
     foreach ($relativePath in $moduleFiles) {
-        $moduleFile = Join-Path $modulePath $relativePath
+        $moduleFile = [System.IO.Path]::GetFullPath((Join-Path $modulePath $relativePath))
         Write-Output "  $moduleFile"
         . $moduleFile
     }

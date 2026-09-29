@@ -7,24 +7,24 @@
     Top-down flow when this script runs:
 
         1. Load helper functions from Core.
-        2. Create dockerfiles\.build.
+        2. Create dockerfiles/.build.
         3. Resolve the latest listed stable version of each package.
-        4. Download each .nupkg into dockerfiles\.build.
-        5. Extract each package into dockerfiles\.build\<package-id>.
-        6. Create dockerfiles\.build\dotnet-tools.
-        7. Copy root *.dll and *.json files from each tools\net8.0\any folder into dockerfiles\.build\dotnet-tools.
-        8. When present under tools\net8.0\any, copy runtimes into dockerfiles\.build\dotnet-tools.
-        9. When present under tools\net8.0\any, copy linux-x64 into dockerfiles\.build\dotnet-tools.
-       10. When present under tools\net8.0\any, copy linux-musl-x64 into dockerfiles\.build\dotnet-tools.
-       11. Delete win* and browser subfolders from dockerfiles\.build\dotnet-tools\runtimes.
-       12. Create dockerfiles\.dotnet-tools, or clear it when it already exists.
-       13. Copy dockerfiles\.build\dotnet-tools into dockerfiles\.dotnet-tools.
-       14. Scan dockerfiles\.dotnet-tools and export the assembly version report
-           to dockerfiles\.dotnet-tools\dotnet-assembly-report.md.
+        4. Download each .nupkg into dockerfiles/.build.
+        5. Extract each package into dockerfiles/.build/<package-id>.
+        6. Create dockerfiles/.build/dotnet-tools.
+        7. Copy root *.dll and *.json files from each tools/net8.0/any folder into dockerfiles/.build/dotnet-tools.
+        8. When present under tools/net8.0/any, copy runtimes into dockerfiles/.build/dotnet-tools.
+        9. When present under tools/net8.0/any, copy linux-x64 into dockerfiles/.build/dotnet-tools.
+       10. When present under tools/net8.0/any, copy linux-musl-x64 into dockerfiles/.build/dotnet-tools.
+       11. Delete win* and browser subfolders from dockerfiles/.build/dotnet-tools/runtimes.
+       12. Create dockerfiles/.dotnet-tools, or clear it when it already exists.
+       13. Copy dockerfiles/.build/dotnet-tools into dockerfiles/.dotnet-tools.
+       14. Scan dockerfiles/.dotnet-tools and export the assembly version report
+           to dockerfiles/.dotnet-tools/dotnet-assembly-report.md.
 
     Image-Build-All.ps1 and Image-TestBuild-DotNet-Tools-TestApp.ps1 invoke
     this script before any image build. Each per-distro script invokes it
-    when dockerfiles\.dotnet-tools is missing or empty. None of them pass
+    when dockerfiles/.dotnet-tools is missing or empty. None of them pass
     -WaitOnExit.
 
 .PARAMETER WaitOnExit
@@ -35,19 +35,19 @@
     None. Package ids are fixed in this script.
 
 .OUTPUTS
-    Host messages, files under dockerfiles\.build, the merged tree in
-    dockerfiles\.dotnet-tools, and dotnet-assembly-report.md in that folder.
+    Host messages, files under dockerfiles/.build, the merged tree in
+    dockerfiles/.dotnet-tools, and dotnet-assembly-report.md in that folder.
     Exit code 0 on success; exit code 1 on failure.
 
 .NOTES
     Requires PowerShell 7.2+ and network access to NuGet.
 
 .EXAMPLE
-    PS> .\.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1
-    Downloads the diagnostic packages and publishes dockerfiles\.dotnet-tools.
+    PS> ./.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1
+    Downloads the diagnostic packages and publishes dockerfiles/.dotnet-tools.
 
 .EXAMPLE
-    PS> .\.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1 -WaitOnExit
+    PS> ./.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1 -WaitOnExit
     Publishes the tools folders and waits for Enter before the window closes.
 #>
 
@@ -74,8 +74,8 @@ if (-not (Test-Path -LiteralPath $corePath -PathType Container)) {
     throw "Required helper folder not found: '$corePath'."
 }
 
-. (Join-Path $modulePath '..\Core\Write-ScriptError.ps1')
-. (Join-Path $modulePath '..\Core\Write-ScriptSuccess.ps1')
+. (Join-Path $modulePath '../Core/Write-ScriptError.ps1')
+. (Join-Path $modulePath '../Core/Write-ScriptSuccess.ps1')
 
 try {
 
@@ -97,32 +97,32 @@ try {
         'browser'
     )
 
-    $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $scriptRoot '..\..'))
-    $dockerfilesToolDirectory = Join-Path $repositoryRoot 'dockerfiles\.dotnet-tools'
+    $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $scriptRoot '..' '..'))
+    $dockerfilesToolDirectory = Join-Path $repositoryRoot 'dockerfiles' '.dotnet-tools'
     $assemblyReportPath = Join-Path $dockerfilesToolDirectory 'dotnet-assembly-report.md'
 
     Write-Output "Loading module files:"
 
     $moduleFiles = @(
-        'Core\New-DotNetToolsBuildDirectory.ps1'
-        'Core\New-DotNetToolsOutputDirectory.ps1'
-        'Core\Copy-DotNetToolsRuntimeFiles.ps1'
-        'Core\Copy-DotNetToolsRuntimeFolder.ps1'
-        'Core\Remove-DotNetToolsRuntimeSubfolders.ps1'
-        'Core\Initialize-DotNetToolsDockerfilesDirectory.ps1'
-        'Core\Copy-DotNetToolsDirectoryTree.ps1'
-        'Core\Get-DotNetToolsNuGetVersion.ps1'
-        'Core\Save-DotNetToolsNuGetPackage.ps1'
-        'Core\Expand-DotNetToolsNuGetPackage.ps1'
-        '..\Core\Get-DotNetToolsAssemblyInfo.ps1'
-        '..\Core\Get-DotNetToolsFileInfo.ps1'
-        '..\Core\New-DotNetToolsMarkdownTable.ps1'
-        '..\Core\ConvertTo-DotNetToolsMarkdownReport.ps1'
-        '..\Core\Export-DotNetToolsAssemblyReport.ps1'
+        'Core/New-DotNetToolsBuildDirectory.ps1'
+        'Core/New-DotNetToolsOutputDirectory.ps1'
+        'Core/Copy-DotNetToolsRuntimeFiles.ps1'
+        'Core/Copy-DotNetToolsRuntimeFolder.ps1'
+        'Core/Remove-DotNetToolsRuntimeSubfolders.ps1'
+        'Core/Initialize-DotNetToolsDockerfilesDirectory.ps1'
+        'Core/Copy-DotNetToolsDirectoryTree.ps1'
+        'Core/Get-DotNetToolsNuGetVersion.ps1'
+        'Core/Save-DotNetToolsNuGetPackage.ps1'
+        'Core/Expand-DotNetToolsNuGetPackage.ps1'
+        '../Core/Get-DotNetToolsAssemblyInfo.ps1'
+        '../Core/Get-DotNetToolsFileInfo.ps1'
+        '../Core/New-DotNetToolsMarkdownTable.ps1'
+        '../Core/ConvertTo-DotNetToolsMarkdownReport.ps1'
+        '../Core/Export-DotNetToolsAssemblyReport.ps1'
     )
 
     foreach ($relativePath in $moduleFiles) {
-        $moduleFile = Join-Path $modulePath $relativePath
+        $moduleFile = [System.IO.Path]::GetFullPath((Join-Path $modulePath $relativePath))
         Write-Output "  $moduleFile"
         . $moduleFile
     }

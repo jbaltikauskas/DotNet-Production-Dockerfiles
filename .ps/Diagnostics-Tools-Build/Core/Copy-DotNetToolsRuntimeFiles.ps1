@@ -3,11 +3,11 @@ function Copy-DotNetToolsRuntimeFiles () {
     .SYNOPSIS
         Copies root runtime files from an extracted dotnet tool.
     .DESCRIPTION
-        Copies *.dll and *.json files from tools\net8.0\any into the shared
+        Copies *.dll and *.json files from tools/net8.0/any into the shared
         dotnet-tools folder. Only files in that folder root are copied.
         Files already in the destination are overwritten.
     .NOTE
-        1. Require the extracted tools\net8.0\any folder.
+        1. Require the extracted tools/net8.0/any folder.
         2. Select root *.dll and *.json files.
         3. Overwrite files that already exist.
         4. Return the number of files copied.
@@ -18,7 +18,7 @@ function Copy-DotNetToolsRuntimeFiles () {
         [ValidateNotNullOrEmpty()]
         [string]$PackageId,
 
-        [Parameter(Mandatory = $true, HelpMessage = 'Path to the dockerfiles\.build working folder.')]
+        [Parameter(Mandatory = $true, HelpMessage = 'Path to the dockerfiles/.build working folder.')]
         [ValidateNotNullOrEmpty()]
         [string]$BuildDirectory,
 
@@ -35,12 +35,12 @@ function Copy-DotNetToolsRuntimeFiles () {
     Process {
 
         $id = $PackageId.ToLowerInvariant()
-        $sourceDirectory = Join-Path $BuildDirectory "$id\tools\net8.0\any"
+        $sourceDirectory = Join-Path $BuildDirectory $id 'tools' 'net8.0' 'any'
         if (-not (Test-Path -LiteralPath $sourceDirectory -PathType Container)) {
             throw "Tool folder was not found: '$sourceDirectory'."
         }
 
-        $runtimeFiles = @(Get-ChildItem -LiteralPath $sourceDirectory -File |
+        $runtimeFiles = @(Get-ChildItem -LiteralPath $sourceDirectory -File -Force |
             Where-Object { $_.Extension -in @('.dll', '.json') })
 
         if ($runtimeFiles.Count -eq 0) {

@@ -3,7 +3,7 @@ function Expand-DotNetToolsNuGetPackage () {
     .SYNOPSIS
         Extracts a downloaded .nupkg into its package folder.
     .DESCRIPTION
-        A .nupkg is a zip archive. Each package is extracted to Build\<package-id>
+        A .nupkg is a zip archive. Each package is extracted to Build/<package-id>
         so package contents do not overwrite each other.
     .NOTE
         1. Replace an existing extract folder.
@@ -20,7 +20,7 @@ function Expand-DotNetToolsNuGetPackage () {
         [ValidateNotNullOrEmpty()]
         [string]$NupkgPath,
 
-        [Parameter(Mandatory = $true, HelpMessage = 'Path to the dockerfiles\.build working folder the package is extracted under.')]
+        [Parameter(Mandatory = $true, HelpMessage = 'Path to the dockerfiles/.build working folder the package is extracted under.')]
         [ValidateNotNullOrEmpty()]
         [string]$BuildDirectory
     )

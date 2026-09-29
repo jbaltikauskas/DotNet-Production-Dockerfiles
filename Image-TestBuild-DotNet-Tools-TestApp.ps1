@@ -12,25 +12,25 @@
         1. Resolve the repository root next to this script, then the tests
            folder under it.
         2. Dot-source Write-ScriptError and Write-ScriptSuccess from
-           .ps\ImageBuild\Core so failure and success paths mirror the
+           .ps/Core so failure and success paths mirror the
            per-distro scripts.
         3. Validate that DotNet-Tools.ps1, the three per-distro scripts, and
            the test-app build script exist.
-        4. Write tests\.build\.DotNet-Tools-Commands.txt (created before
+        4. Write tests/.build/.DotNet-Tools-Commands.txt (created before
            any docker build).
-        5. Invoke .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1, which writes
-           dockerfiles\.build and dockerfiles\.dotnet-tools.
+        5. Invoke .ps/Diagnostics-Tools-Build/DotNet-Tools.ps1, which writes
+           dockerfiles/.build and dockerfiles/.dotnet-tools.
         6. Invoke Image-Build-Alpine.ps1          -ToolsOnly.
         7. Invoke Image-Build-Ubuntu.ps1          -ToolsOnly.
         8. Invoke Image-Build-Ubuntu-Chiseled.ps1 -ToolsOnly.
-        9. Invoke .ps\Core\Export-DotNetArtifactReport.ps1 to scan
-           dockerfiles\.dotnet-tools and write the assembly report straight to
-           tests\.build\dotnet-assembly-report.md. This runs before the test-app
+        9. Invoke .ps/Core/Export-DotNetArtifactReport.ps1 to scan
+           dockerfiles/.dotnet-tools and write the assembly report straight to
+           tests/.build/dotnet-assembly-report.md. This runs before the test-app
            build so the report is part of the docker context and lands at
            /app/dotnet-assembly-report.md in each test-app image.
-       10. Invoke .ps\TestApp\Build-DotNet-Tools-TestApp.ps1, which:
+       10. Invoke .ps/TestApp/Build-DotNet-Tools-TestApp.ps1, which:
              - restores/builds DotNet-Tools-TestApp for linux-x64
-             - copies artifacts to tests\.build (keeping the report written above)
+             - copies artifacts to tests/.build (keeping the report written above)
              - builds the three test-app images
              - starts each container detached
 
@@ -70,7 +70,7 @@
     Dockerfile. Use `-NoCache:$false` to allow the BuildKit cache.
 
 .PARAMETER BuildConfiguration
-    Forwarded to .ps\TestApp\Build-DotNet-Tools-TestApp.ps1 as
+    Forwarded to .ps/TestApp/Build-DotNet-Tools-TestApp.ps1 as
     -buildConfiguration. Defaults to Debug.
 
 .INPUTS
@@ -78,34 +78,34 @@
 
 .OUTPUTS
     Host messages, docker CLI output, and dotnet CLI output, plus
-    tests\.build\dotnet-assembly-report.md. Exit code 0 on success; exit
+    tests/.build/dotnet-assembly-report.md. Exit code 0 on success; exit
     code 1 if any sub-script fails.
 
 .NOTES
     Requires PowerShell 7.2+, a working Docker installation with buildx, the
     .NET SDK, and network access to NuGet. This script runs
-    .ps\Diagnostics-Tools-Build\DotNet-Tools.ps1, which downloads the
-    diagnostic packages into dockerfiles\.build and publishes the merged
-    Linux tree to dockerfiles\.dotnet-tools before the image builds.
+    .ps/Diagnostics-Tools-Build/DotNet-Tools.ps1, which downloads the
+    diagnostic packages into dockerfiles/.build and publishes the merged
+    Linux tree to dockerfiles/.dotnet-tools before the image builds.
 
 .EXAMPLE
-    PS> .\Image-TestBuild-DotNet-Tools-TestApp.ps1
-    Publishes dockerfiles\.build and dockerfiles\.dotnet-tools, builds the
+    PS> ./Image-TestBuild-DotNet-Tools-TestApp.ps1
+    Publishes dockerfiles/.build and dockerfiles/.dotnet-tools, builds the
     three diagnostics-tools images, the Debug linux-x64 test app, the three
     test-app images, and starts those containers detached.
 
 .EXAMPLE
-    PS> .\Image-TestBuild-DotNet-Tools-TestApp.ps1 -NoCache:$false
+    PS> ./Image-TestBuild-DotNet-Tools-TestApp.ps1 -NoCache:$false
     Builds while allowing the BuildKit cache, then the test app, images,
     and detached containers.
 
 .EXAMPLE
-    PS> .\Image-TestBuild-DotNet-Tools-TestApp.ps1 -BuildConfiguration Release
+    PS> ./Image-TestBuild-DotNet-Tools-TestApp.ps1 -BuildConfiguration Release
     Builds the diagnostics-tools images, then the test app in Release,
     images, and detached containers.
 
 .EXAMPLE
-    PS> .\Image-TestBuild-DotNet-Tools-TestApp.ps1 -DotNetVersion 10
+    PS> ./Image-TestBuild-DotNet-Tools-TestApp.ps1 -DotNetVersion 10
     Builds the .NET 10 diagnostics-tools and test-app images, then starts
     the containers detached.
 #>
@@ -136,16 +136,16 @@ if ([string]::IsNullOrWhiteSpace($scriptRoot)) {
 $repositoryRoot = [System.IO.Path]::GetFullPath($scriptRoot)
 $testsRoot = Join-Path $repositoryRoot 'tests'
 
-$modulePath = Join-Path $repositoryRoot '.ps\ImageBuild'
+$modulePath = Join-Path $repositoryRoot '.ps' 'ImageBuild'
 if (-not (Test-Path -LiteralPath $modulePath -PathType Container)) {
     throw "Required helper folder not found: '$modulePath'."
 }
 
-. (Join-Path $modulePath '..\Core\Write-ScriptError.ps1')
-. (Join-Path $modulePath '..\Core\Write-ScriptSuccess.ps1')
-. (Join-Path $modulePath '..\Core\Write-Section.ps1')
-. (Join-Path $modulePath '..\Core\Assert-LastExitCode.ps1')
-. (Join-Path $modulePath 'Core\Invoke-ImageBuildScript.ps1')
+. (Join-Path $modulePath '../Core/Write-ScriptError.ps1')
+. (Join-Path $modulePath '../Core/Write-ScriptSuccess.ps1')
+. (Join-Path $modulePath '../Core/Write-Section.ps1')
+. (Join-Path $modulePath '../Core/Assert-LastExitCode.ps1')
+. (Join-Path $modulePath 'Core/Invoke-ImageBuildScript.ps1')
 
 try {
 
@@ -155,10 +155,10 @@ try {
         'Image-Build-Ubuntu-Chiseled.ps1'
     )
 
-    $toolsScriptRelativePath = '.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1'
-    $testAppScriptRelativePath = '.ps\TestApp\Build-DotNet-Tools-TestApp.ps1'
-    $reportScriptRelativePath = '.ps\Core\Export-DotNetArtifactReport.ps1'
-    $dotnetToolsDirectory = Join-Path $repositoryRoot 'dockerfiles\.dotnet-tools'
+    $toolsScriptRelativePath = '.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1'
+    $testAppScriptRelativePath = '.ps/TestApp/Build-DotNet-Tools-TestApp.ps1'
+    $reportScriptRelativePath = '.ps/Core/Export-DotNetArtifactReport.ps1'
+    $dotnetToolsDirectory = Join-Path $repositoryRoot 'dockerfiles' '.dotnet-tools'
 
     $buildDirectory = Join-Path $testsRoot '.build'
     if (-not (Test-Path -LiteralPath $buildDirectory -PathType Container)) {
@@ -213,11 +213,11 @@ try {
             -BannerSuffix "-ToolsOnly -DotNetVersion $DotNetVersion"
     }
 
-    # Generate the assembly report into tests\.build BEFORE the test-app build so
+    # Generate the assembly report into tests/.build BEFORE the test-app build so
     # Build-TestAppDockerImages picks it up as part of the docker context and it
     # lands at /app/dotnet-assembly-report.md. Copy-BuildArtifacts keeps this file
-    # when it clears tests\.build. Written after DotNet-Tools.ps1 has populated
-    # dockerfiles\.dotnet-tools (the scan source), which the distro builds do not change.
+    # when it clears tests/.build. Written after DotNet-Tools.ps1 has populated
+    # dockerfiles/.dotnet-tools (the scan source), which the distro builds do not change.
     Invoke-ImageBuildScript `
         -RepositoryRoot $repositoryRoot `
         -RelativePath $reportScriptRelativePath `

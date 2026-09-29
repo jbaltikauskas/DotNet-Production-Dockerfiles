@@ -490,15 +490,15 @@ From the repository root in `pwsh`, the scripts apply the same `docker buildx` f
 
 ```powershell
 # Publishes dockerfiles/.build and dockerfiles/.dotnet-tools, then all three base images
-.\Image-Build-All.ps1
+./Image-Build-All.ps1
 
 # One distro. Publishes dockerfiles/.dotnet-tools when that folder is missing.
-.\Image-Build-Alpine.ps1
-.\Image-Build-Ubuntu.ps1
-.\Image-Build-Ubuntu-Chiseled.ps1
+./Image-Build-Alpine.ps1
+./Image-Build-Ubuntu.ps1
+./Image-Build-Ubuntu-Chiseled.ps1
 
 # Publishes the tools folders, then the three base images, the test-app images, and detached containers
-.\Image-TestBuild-DotNet-Tools-TestApp.ps1
+./Image-TestBuild-DotNet-Tools-TestApp.ps1
 ```
 
 Parameters and per-script workflows are in [Building images on your local machine (PowerShell)](#building-images-on-your-local-machine-powershell). [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1) is covered with [DotNet-Tools-TestApp](#dotnet-tools-testapp).
@@ -629,45 +629,45 @@ See [Prerequisites](#prerequisites).
 
 - PowerShell 7.2 or later (`pwsh`), installed with `dotnet tool install --global PowerShell`.
 - [Docker Desktop for Windows](https://docs.docker.com/desktop/setup/install/windows-install/) with BuildKit (`docker buildx` on PATH).
-- [`Image-Build-All.ps1`](Image-Build-All.ps1) and [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1) run [`.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) first. That script writes `dockerfiles/.build` and `dockerfiles/.dotnet-tools`. Each per-distro script does the same when that tools folder is missing or empty, and reuses it when it already exists. A terminal `docker build` still needs the folder. See [Diagnostic tools build](#diagnostic-tools-build). Every image build copies it.
+- [`Image-Build-All.ps1`](Image-Build-All.ps1) and [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1) run [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) first. That script writes `dockerfiles/.build` and `dockerfiles/.dotnet-tools`. Each per-distro script does the same when that tools folder is missing or empty, and reuses it when it already exists. A terminal `docker build` still needs the folder. See [Diagnostic tools build](#diagnostic-tools-build). Every image build copies it.
 
 ### Parameters
 
 | Parameter  | Values                          | Default | Effect                                                                                                    |
 | ---------- | ------------------------------- | ------- | --------------------------------------------------------------------------------------------------------- |
 | `-NoCache` | `$true`, `$false`               | `$true` | Shared by the build scripts, including [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1). `Image-Build-All.ps1` forwards it verbatim to each per-distro script. `$true` passes `--no-cache` (matches the Copy-and-Paste examples in each Dockerfile). |
-| `-WaitOnExit` | switch                       | off     | On the three per-distro scripts and on [`.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1). Waits for Enter after success or failure so a double-clicked window stays open. Omit it in a terminal or CI run. `Image-Build-All.ps1` and `Image-TestBuild-DotNet-Tools-TestApp.ps1` do not accept it, and they do not pass it when they call `DotNet-Tools.ps1`. |
+| `-WaitOnExit` | switch                       | off     | On the three per-distro scripts and on [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1). Waits for Enter after success or failure so a double-clicked window stays open. Omit it in a terminal or CI run. `Image-Build-All.ps1` and `Image-TestBuild-DotNet-Tools-TestApp.ps1` do not accept it, and they do not pass it when they call `DotNet-Tools.ps1`. |
 
 ### Usage examples
 
 #### All three images — [`Image-Build-All.ps1`](Image-Build-All.ps1)
 
-Runs [`.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) first, writing `dockerfiles/.build` and `dockerfiles/.dotnet-tools`, then the three per-distro scripts below in order (Alpine, Ubuntu Noble, Ubuntu Chiseled). Stops immediately if the tools script or any image script fails. To narrow the scope, invoke a per-distro script directly. That script publishes `dockerfiles/.dotnet-tools` when the folder is missing or empty, and reuses it when it already exists.
+Runs [`.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Build/DotNet-Tools.ps1) first, writing `dockerfiles/.build` and `dockerfiles/.dotnet-tools`, then the three per-distro scripts below in order (Alpine, Ubuntu Noble, Ubuntu Chiseled). Stops immediately if the tools script or any image script fails. To narrow the scope, invoke a per-distro script directly. That script publishes `dockerfiles/.dotnet-tools` when the folder is missing or empty, and reuses it when it already exists.
 
 ```powershell
-.\Image-Build-All.ps1
-.\Image-Build-All.ps1 -NoCache:$false
+./Image-Build-All.ps1
+./Image-Build-All.ps1 -NoCache:$false
 ```
 
 #### Alpine only — [`Image-Build-Alpine.ps1`](Image-Build-Alpine.ps1) (**primary**)
 
 ```powershell
-.\Image-Build-Alpine.ps1
-.\Image-Build-Alpine.ps1 -NoCache:$false
+./Image-Build-Alpine.ps1
+./Image-Build-Alpine.ps1 -NoCache:$false
 ```
 
 #### Ubuntu Noble only — [`Image-Build-Ubuntu.ps1`](Image-Build-Ubuntu.ps1) (secondary)
 
 ```powershell
-.\Image-Build-Ubuntu.ps1
-.\Image-Build-Ubuntu.ps1 -NoCache:$false
+./Image-Build-Ubuntu.ps1
+./Image-Build-Ubuntu.ps1 -NoCache:$false
 ```
 
 #### Ubuntu Chiseled only — [`Image-Build-Ubuntu-Chiseled.ps1`](Image-Build-Ubuntu-Chiseled.ps1) (last-resort distroless)
 
 ```powershell
-.\Image-Build-Ubuntu-Chiseled.ps1
-.\Image-Build-Ubuntu-Chiseled.ps1 -NoCache:$false
+./Image-Build-Ubuntu-Chiseled.ps1
+./Image-Build-Ubuntu-Chiseled.ps1 -NoCache:$false
 ```
 
 #### Tools images and the test app — [`Image-TestBuild-DotNet-Tools-TestApp.ps1`](Image-TestBuild-DotNet-Tools-TestApp.ps1)
@@ -675,21 +675,21 @@ Runs [`.ps\Diagnostics-Tools-Build\DotNet-Tools.ps1`](.ps/Diagnostics-Tools-Buil
 Publishes `dockerfiles/.build` and `dockerfiles/.dotnet-tools`, builds the three tools images, the three test-app images, and starts those containers detached. See [DotNet-Tools-TestApp](#dotnet-tools-testapp).
 
 ```powershell
-.\Image-TestBuild-DotNet-Tools-TestApp.ps1
-.\Image-TestBuild-DotNet-Tools-TestApp.ps1 -NoCache:$false
+./Image-TestBuild-DotNet-Tools-TestApp.ps1
+./Image-TestBuild-DotNet-Tools-TestApp.ps1 -NoCache:$false
 ```
 
 ### Typical local workflows
 
 ```powershell
 # 1. Publish diagnostic NuGet tools into dockerfiles/.build and dockerfiles/.dotnet-tools, then build every image.
-.\Image-Build-All.ps1
+./Image-Build-All.ps1
 
 # 2. Iterating on the Alpine Dockerfile only, reusing BuildKit cache and the tools folder from step 1.
-.\Image-Build-Alpine.ps1 -NoCache:$false
+./Image-Build-Alpine.ps1 -NoCache:$false
 
 # 3. Rebuilding one distro. The script publishes dockerfiles/.dotnet-tools when that folder is missing.
-.\Image-Build-Ubuntu.ps1
+./Image-Build-Ubuntu.ps1
 ```
 
 The scripts stream `docker buildx build` output live, exit non-zero on any docker failure, and end with a cyan `Built N image(s):` summary listing every tag produced. They return immediately unless you pass `-WaitOnExit`.
