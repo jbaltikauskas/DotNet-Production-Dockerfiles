@@ -121,12 +121,9 @@ function Get-DotNetToolsReportReferenceSection () {
     .NOTE
         1. Return the fixed markdown lines.
     #>
-    [CmdletBinding()]
-    Param ()
 
     Begin {
         Write-Verbose ("BEGIN: {0}" -f $MyInvocation.MyCommand.Name)
-        Write-Verbose ($PSBoundParameters | Out-String)
     }
 
     Process {
