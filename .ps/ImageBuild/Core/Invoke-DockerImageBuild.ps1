@@ -35,7 +35,7 @@ function Invoke-DockerImageBuild () {
         [ValidateSet('aspnet-base', 'runtime-base', 'final')]
         [string]$BuildTarget,
 
-        [Parameter(Mandatory = $true, HelpMessage = 'Image tag to apply, for example contoso/alpine-net-10:latest.')]
+        [Parameter(Mandatory = $true, HelpMessage = 'Image tag to apply, for example contoso/alpine-net-lean-10:latest.')]
         [ValidateNotNullOrEmpty()]
         [string]$Tag,
 

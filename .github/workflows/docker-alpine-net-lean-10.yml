@@ -1,6 +1,6 @@
-name: Docker Alpine .NET 10
+name: Docker Alpine .NET Lean 10
 
-# Publishes ghcr.io/<owner>/alpine-net-10
+# Publishes ghcr.io/<owner>/alpine-net-lean-10
 # Target: aspnet-base, without the dotnet-tools build context.
 
 on:
@@ -11,7 +11,7 @@ env:
 
   REGISTRY: ghcr.io
 
-  IMAGE_NAME: alpine-net-10
+  IMAGE_NAME: alpine-net-lean-10
 
   DOCKERFILE: ./dockerfiles/alpine/10/Dockerfile
 

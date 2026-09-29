@@ -42,7 +42,12 @@ function Get-ImageBuildDefinitions () {
         $versionFolder = "dockerfiles/${DistroLabel}/${DotNetVersion}"
         $dockerfile = "${versionFolder}/Dockerfile"
         $toolsImageTag = "contoso/${DistroLabel}-net-dotnet-tools-${DotNetVersion}:latest"
-        $baseImageTag = "contoso/${DistroLabel}-net-${DotNetVersion}:latest"
+        $baseImageSlug = if ($DistroLabel -eq 'alpine') {
+            "${DistroLabel}-net-lean-${DotNetVersion}"
+        } else {
+            "${DistroLabel}-net-${DotNetVersion}"
+        }
+        $baseImageTag = "contoso/${baseImageSlug}:latest"
 
         $imageBuilds = [System.Collections.Generic.List[pscustomobject]]::new()
 

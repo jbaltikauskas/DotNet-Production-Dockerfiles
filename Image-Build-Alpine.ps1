@@ -26,7 +26,7 @@
     Images produced for -DotNetVersion 10 (the default):
 
         - contoso/alpine-net-dotnet-tools-10:latest    (target: final)
-        - contoso/alpine-net-10:latest                 (target: aspnet-base)
+        - contoso/alpine-net-lean-10:latest            (target: aspnet-base)
 
     Dockerfile, build context, and tags use -DotNetVersion:
     dockerfiles/alpine/<DotNetVersion> and
@@ -65,7 +65,7 @@
 .EXAMPLE
     PS> ./Image-Build-Alpine.ps1
     Publishes dockerfiles/.dotnet-tools when that folder is missing, then
-    builds contoso/alpine-net-dotnet-tools-10:latest and contoso/alpine-net-10:latest.
+    builds contoso/alpine-net-dotnet-tools-10:latest and contoso/alpine-net-lean-10:latest.
 
 .EXAMPLE
     PS> ./Image-Build-Alpine.ps1 -DotNetVersion 10

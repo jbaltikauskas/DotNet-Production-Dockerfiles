@@ -127,7 +127,7 @@ Alpine is the primary base, Ubuntu Noble is the secondary base, and Ubuntu Chise
 
 `-DotNetVersion` defaults to `10`. It selects `dockerfiles/<distro>/10` and the `10` segment of each tag. The same value is forwarded to every per-distro script and to the test-app script.
 
-`-ToolsOnly` keeps this run on the `final` stage. The lean images (`contoso/alpine-net-10`, `contoso/ubuntu-net-10`, `contoso/ubuntu-chiseled-net-10`) are built by running a per-distro script, or `Image-Build-All.ps1`, without `-ToolsOnly`.
+`-ToolsOnly` keeps this run on the `final` stage. The lean images (`contoso/alpine-net-lean-10`, `contoso/ubuntu-net-10`, `contoso/ubuntu-chiseled-net-10`) are built by running a per-distro script, or `Image-Build-All.ps1`, without `-ToolsOnly`.
 
 `-NoCache` defaults to `$true`, which passes `--no-cache` to `docker buildx build` and matches the Copy-and-Paste examples in each Dockerfile. Pass `-NoCache:$false` to allow the BuildKit cache while iterating.
 
